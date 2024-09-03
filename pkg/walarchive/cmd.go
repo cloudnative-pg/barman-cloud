@@ -35,17 +35,6 @@ type BarmanArchiver struct {
 	RemoveEmptyFileArchive func() error
 }
 
-func WrappedArchiveList(archiver *BarmanArchiver, options []string, walFileList []string) error {
-	archiverResult := archiver.ArchiveList(context.Background(), walFileList, options)
-	for _, result := range archiverResult {
-		if result.Err != nil {
-			return result.Err
-		}
-	}
-
-	return nil
-}
-
 // WALArchiverResult contains the result of the archival of one WAL
 type WALArchiverResult struct {
 	// The WAL that have been archived
