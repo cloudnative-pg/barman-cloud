@@ -38,11 +38,15 @@ type Capabilities struct {
 	HasAzureManagedIdentity    bool
 }
 
-//// ShouldExecuteBackupWithName returns true if the new backup logic should be executed
-//func (c *Capabilities) ShouldExecuteBackupWithName(cluster *apiv1.Cluster) bool {
-//	if cluster != nil && cluster.ShouldForceLegacyBackup() {
-//		return false
-//	}
-//
-//	return c.hasName
-//}
+type legacyExecutor interface {
+	ShouldForceLegacyBackup() bool
+}
+
+// ShouldExecuteBackupWithName returns true if the new backup logic should be executed
+func (c *Capabilities) ShouldExecuteBackupWithName(exec legacyExecutor) bool {
+	if exec.ShouldForceLegacyBackup() {
+		return false
+	}
+
+	return c.hasName
+}
