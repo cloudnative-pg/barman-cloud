@@ -21,14 +21,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
 	"math"
 	"os/exec"
 	"sync"
 	"time"
 
-	apiv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/barman/spool"
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/execlog"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 )
@@ -43,9 +41,6 @@ var ErrWALNotFound = errors.New("WAL not found")
 // WALRestorer is a structure containing every info needed to restore
 // some WALs from the object storage
 type WALRestorer struct {
-	// The cluster for which we are archiving
-	cluster *apiv1.Cluster
-
 	// The spool of WAL files to be archived in parallel
 	spool *spool.WALSpool
 
@@ -72,22 +67,23 @@ type Result struct {
 }
 
 // New creates a new WAL restorer
-func New(ctx context.Context, cluster *apiv1.Cluster, env []string, spoolDirectory string) (
-	restorer *WALRestorer,
-	err error,
-) {
+func New(
+	ctx context.Context,
+	utils spool.FileUtils,
+	env []string,
+	spoolDirectory string,
+) (restorer *WALRestorer, err error) {
 	contextLog := log.FromContext(ctx)
 	var walRecoverSpool *spool.WALSpool
 
-	if walRecoverSpool, err = spool.New(spoolDirectory); err != nil {
+	if walRecoverSpool, err = spool.New(utils, spoolDirectory); err != nil {
 		contextLog.Info("Cannot initialize the WAL spool", "spoolDirectory", spoolDirectory)
 		return nil, fmt.Errorf("while creating spool directory: %w", err)
 	}
 
 	restorer = &WALRestorer{
-		cluster: cluster,
-		spool:   walRecoverSpool,
-		env:     env,
+		spool: walRecoverSpool,
+		env:   env,
 	}
 	return restorer, nil
 }
@@ -155,6 +151,7 @@ func (restorer *WALRestorer) RestoreList(
 	fetchList []string,
 	destinationPath string,
 	options []string,
+	runStream func(cmd *exec.Cmd, cmdName string) error,
 ) (resultList []Result) {
 	resultList = make([]Result, len(fetchList))
 	contextLog := log.FromContext(ctx)
@@ -174,7 +171,7 @@ func (restorer *WALRestorer) RestoreList(
 			}
 
 			result.StartTime = time.Now()
-			result.Err = restorer.Restore(fetchList[walIndex], result.DestinationPath, options)
+			result.Err = restorer.Restore(runStream, fetchList[walIndex], result.DestinationPath, options)
 			result.EndTime = time.Now()
 
 			elapsedWalTime := result.EndTime.Sub(result.StartTime)
@@ -219,7 +216,11 @@ func (restorer *WALRestorer) RestoreList(
 }
 
 // Restore restores a WAL file from the object store
-func (restorer *WALRestorer) Restore(walName, destinationPath string, baseOptions []string) error {
+func (restorer *WALRestorer) Restore(
+	runStream func(cmd *exec.Cmd, cmdName string) error,
+	walName, destinationPath string,
+	baseOptions []string,
+) error {
 	const (
 		exitCodeBucketOrWalNotFound = 1
 		exitCodeConnectivityError   = 2
@@ -245,7 +246,7 @@ func (restorer *WALRestorer) Restore(walName, destinationPath string, baseOption
 		options...) // #nosec G204
 	barmanCloudWalRestoreCmd.Env = restorer.env
 
-	err := execlog.RunStreaming(barmanCloudWalRestoreCmd, barmanCapabilities.BarmanCloudWalRestore)
+	err := runStream(barmanCloudWalRestoreCmd, barmanCapabilities.BarmanCloudWalRestore)
 	if err == nil {
 		return nil
 	}
