@@ -38,12 +38,12 @@ type Capabilities struct {
 	HasAzureManagedIdentity    bool
 }
 
-type legacyExecutor interface {
+type LegacyExecutor interface {
 	ShouldForceLegacyBackup() bool
 }
 
 // ShouldExecuteBackupWithName returns true if the new backup logic should be executed
-func (c *Capabilities) ShouldExecuteBackupWithName(exec legacyExecutor) bool {
+func (c *Capabilities) ShouldExecuteBackupWithName(exec LegacyExecutor) bool {
 	if exec.ShouldForceLegacyBackup() {
 		return false
 	}
