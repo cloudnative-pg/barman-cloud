@@ -43,6 +43,7 @@ type FileUtils struct {
 	EnsureDirectoryExists func(string) error
 	FileExists            func(string) (bool, error)
 	MoveFile              func(string, string) error
+	RemoveFile            func(fileName string) error
 }
 
 // New create new WAL spool

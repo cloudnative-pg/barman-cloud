@@ -39,7 +39,7 @@ var _ = Describe("Spool", func() {
 		tmpDir2, err = os.MkdirTemp("", "spool-test-tmp-")
 		Expect(err).NotTo(HaveOccurred())
 
-		spool, err = New(tmpDir)
+		spool, err = New(FileUtils{}, tmpDir)
 		Expect(err).NotTo(HaveOccurred())
 	})
 

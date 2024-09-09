@@ -32,6 +32,7 @@ const (
 
 	// CertificatesDir location to store the certificates
 	CertificatesDir = ScratchDataDirectory + "/certificates/"
+
 	// BarmanBackupEndpointCACertificateLocation is the location where the barman endpoint
 	// CA certificate is stored
 	BarmanBackupEndpointCACertificateLocation = CertificatesDir + BarmanBackupEndpointCACertificateFileName
