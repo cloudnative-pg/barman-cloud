@@ -32,3 +32,6 @@ go.work
 # artifacts
 /bin/
 /testbin/
+
+# Task temporary files
+.task/
