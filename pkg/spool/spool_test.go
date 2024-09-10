@@ -32,6 +32,8 @@ var _ = Describe("Spool", func() {
 	var spool *WALSpool
 
 	_ = BeforeEach(func() {
+		Skip("waiting for cloudnative-pg-machinery")
+
 		var err error
 		tmpDir, err = os.MkdirTemp("", "spool-test-")
 		Expect(err).NotTo(HaveOccurred())
