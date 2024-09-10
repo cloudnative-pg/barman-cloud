@@ -17,12 +17,13 @@ limitations under the License.
 package command
 
 import (
+	"context"
 	"fmt"
 
-	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
+	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
 
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
+	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
 )
 
 // CloudWalRestoreOptions returns the options needed to execute the barman command successfully
@@ -74,6 +75,9 @@ func AppendCloudProviderOptionsFromBackup(
 
 // appendCloudProviderOptions takes an options array and adds the cloud provider specified as arguments
 func appendCloudProviderOptions(options []string, credentials barmanTypes.BarmanCredentials) ([]string, error) {
+	// TODO: this function should really receive a context
+	logger := logging.FromContext(context.Background())
+
 	capabilities, err := barmanCapabilities.CurrentCapabilities()
 	if err != nil {
 		return nil, err
@@ -92,7 +96,7 @@ func appendCloudProviderOptions(options []string, credentials barmanTypes.Barman
 			err := fmt.Errorf(
 				"barman >= 2.13 is required to use Azure object storage, current: %v",
 				capabilities.Version)
-			log.Error(err, "Barman version not supported")
+			logger.Error(err, "Barman version not supported")
 			return nil, err
 		}
 
@@ -109,7 +113,7 @@ func appendCloudProviderOptions(options []string, credentials barmanTypes.Barman
 			err := fmt.Errorf(
 				"barman >= 2.18 is required to use azureInheritFromAzureAD, current: %v",
 				capabilities.Version)
-			log.Error(err, "Barman version not supported")
+			logger.Error(err, "Barman version not supported")
 			return nil, err
 		}
 
@@ -122,7 +126,7 @@ func appendCloudProviderOptions(options []string, credentials barmanTypes.Barman
 			err := fmt.Errorf(
 				"barman >= 2.19 is required to use Google Cloud Storage, current: %v",
 				capabilities.Version)
-			log.Error(err, "Barman version not supported")
+			logger.Error(err, "Barman version not supported")
 			return nil, err
 		}
 		options = append(

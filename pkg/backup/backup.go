@@ -36,7 +36,7 @@ func NewBackupCommand(
 	}
 }
 
-// getDataConfiguration gets the configuration in the `Data` object of the Barman configuration
+// GetDataConfiguration gets the configuration in the `Data` object of the Barman configuration
 func (b *Command) GetDataConfiguration(
 	options []string,
 ) ([]string, error) {

@@ -95,6 +95,8 @@ func (archiver *WALArchiver) GatherWALFilesToArchive(
 	return walList
 }
 
+// BarmanCloudWalArchiveOptions calculates the set of options to be
+// used with barman-cloud-wal-archive
 func (archiver *WALArchiver) BarmanCloudWalArchiveOptions(
 	configuration *barmanTypes.BarmanObjectStoreConfiguration,
 	clusterName string,

@@ -46,11 +46,11 @@ import (
 	"fmt"
 	"os/exec"
 
+	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+
+	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/catalog"
 	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
-
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
-	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 )
 
 func executeQueryCommand(
@@ -61,7 +61,7 @@ func executeQueryCommand(
 	additionalOptions []string,
 	env []string,
 ) (string, error) {
-	contextLogger := log.FromContext(ctx).WithName("barman")
+	contextLogger := logging.FromContext(ctx).WithName("barman")
 
 	options := []string{"--format", "json"}
 
@@ -104,7 +104,7 @@ func GetBackupList(
 	serverName string,
 	env []string,
 ) (*catalog.Catalog, error) {
-	contextLogger := log.FromContext(ctx).WithName("barman")
+	contextLogger := logging.FromContext(ctx).WithName("barman")
 
 	rawJSON, err := executeQueryCommand(
 		ctx,
@@ -136,7 +136,7 @@ func GetBackupByName(
 	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
 	env []string,
 ) (*catalog.BarmanBackup, error) {
-	contextLogger := log.FromContext(ctx)
+	contextLogger := logging.FromContext(ctx)
 
 	rawJSON, err := executeQueryCommand(
 		ctx,
@@ -150,7 +150,7 @@ func GetBackupByName(
 		return nil, err
 	}
 
-	contextLogger.Debug("raw backup barman object", "rawBarmanObject", rawJSON)
+	contextLogger.V(4).Info("raw backup barman object", "rawBarmanObject", rawJSON)
 
 	return catalog.NewBackupFromBarmanCloudBackupShow(rawJSON)
 }
@@ -162,7 +162,7 @@ func GetLatestBackup(
 	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
 	env []string,
 ) (*catalog.BarmanBackup, error) {
-	contextLogger := log.FromContext(ctx)
+	contextLogger := logging.FromContext(ctx)
 	// Extracting the latest backup using barman-cloud-backup-list
 	backupList, err := GetBackupList(ctx, barmanConfiguration, serverName, env)
 	if err != nil {
@@ -170,7 +170,7 @@ func GetLatestBackup(
 		return nil, err
 	}
 
-	contextLogger.Debug("raw backup list object", "backupList", backupList)
+	contextLogger.V(4).Info("raw backup list object", "backupList", backupList)
 
 	// We have just made a new backup, if the backup list is empty
 	// something is going wrong in the cloud storage

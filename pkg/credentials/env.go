@@ -303,6 +303,8 @@ func envSetGoogleCredentials(
 	return env, nil
 }
 
+// FileUtils is a structure allowing the caller to inject
+// a set of functions to manipulate files
 type FileUtils struct {
 	RemoveFile      func(string) error
 	WriteFileAtomic func(fileName string, contents []byte, perm os.FileMode) (bool, error)

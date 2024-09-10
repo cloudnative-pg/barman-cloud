@@ -349,6 +349,7 @@ func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.
 	return allErrors
 }
 
+// ValidateAwsCredentials validates the AWS Credentials
 func (s3 *S3Credentials) ValidateAwsCredentials(path *field.Path) field.ErrorList {
 	allErrors := field.ErrorList{}
 	credentials := 0
@@ -395,6 +396,7 @@ func (s3 *S3Credentials) ValidateAwsCredentials(path *field.Path) field.ErrorLis
 	return allErrors
 }
 
+// ValidateGCSCredentials validates the GCS credentials
 func (gcs *GoogleCredentials) ValidateGCSCredentials(path *field.Path) field.ErrorList {
 	allErrors := field.ErrorList{}
 

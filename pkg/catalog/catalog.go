@@ -140,6 +140,9 @@ func (catalog *Catalog) FindBackupInfo(
 	return catalog.findLatestBackupFromTimeline(targetTLI), nil
 }
 
+// LsnAdapter is a common interface between types representing LSNs
+// This interface should not be needed anymore once we've
+// a common library between cloudnative-pg and the barman plugin
 type LsnAdapter interface {
 	Parse() (int64, error)
 	LessAdapter(other LsnAdapter) bool

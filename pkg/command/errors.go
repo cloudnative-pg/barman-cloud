@@ -17,9 +17,11 @@ limitations under the License.
 package command
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
+	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 )
 
@@ -84,7 +86,9 @@ func UnmarshalBarmanCloudRestoreExitCode(exitCode int) error {
 	var currentCapabilities *barmanCapabilities.Capabilities
 	currentCapabilities, err := barmanCapabilities.CurrentCapabilities()
 	if err != nil {
-		log.Error(err, "error while detecting Barman capabilities")
+		// TODO: this function should really receive a context
+		logger := logging.FromContext(context.Background())
+		logger.Error(err, "error while detecting Barman capabilities")
 
 		// We default to old exit codes when we could not detect
 		// the Barman capabilities

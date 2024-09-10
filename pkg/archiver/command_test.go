@@ -19,8 +19,7 @@ package archiver
 import (
 	"strings"
 
-	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
-
+	barmanSpool "github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
 	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -43,7 +42,7 @@ var _ = Describe("barmanCloudWalArchiveOptions", func() {
 	It("should generate correct arguments", func(ctx SpecContext) {
 		archiver, err := New(
 			ctx, nil, "spool", "pgdata",
-			spool.FileUtils{}, nil, nil)
+			barmanSpool.FileUtils{}, nil, nil)
 		Expect(err).ToNot(HaveOccurred())
 
 		extraOptions := []string{"--min-chunk-size=5MB", "--read-timeout=60", "-vv"}
@@ -71,7 +70,7 @@ var _ = Describe("barmanCloudWalArchiveOptions", func() {
 
 		archiver, err := New(
 			ctx, nil, "spool", "pgdata",
-			spool.FileUtils{}, nil, nil)
+			barmanSpool.FileUtils{}, nil, nil)
 		Expect(err).ToNot(HaveOccurred())
 
 		options, err := archiver.BarmanCloudWalArchiveOptions(config, "test-cluster")

@@ -38,6 +38,8 @@ type Capabilities struct {
 	HasAzureManagedIdentity    bool
 }
 
+// LegacyExecutor allows this code to know
+// if a legacy backup should be forced or not
 type LegacyExecutor interface {
 	ShouldForceLegacyBackup() bool
 }

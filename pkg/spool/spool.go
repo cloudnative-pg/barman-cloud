@@ -40,6 +40,8 @@ type WALSpool struct {
 	utils          FileUtils
 }
 
+// FileUtils is a structure allowing the caller to inject
+// a set of functions to manipulate files
 type FileUtils struct {
 	EnsureDirectoryExists func(string) error
 	FileExists            func(string) (bool, error)

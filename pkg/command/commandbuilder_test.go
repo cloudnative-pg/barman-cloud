@@ -26,7 +26,6 @@ import (
 )
 
 var _ = Describe("barmanCloudWalRestoreOptions", func() {
-	const namespace = "test"
 	var storageConf *barmanTypes.BarmanObjectStoreConfiguration
 	BeforeEach(func() {
 		storageConf = &barmanTypes.BarmanObjectStoreConfiguration{

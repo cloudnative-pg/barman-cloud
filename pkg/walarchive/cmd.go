@@ -30,6 +30,8 @@ import (
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 )
 
+// BarmanArchiver implements a WAL archiver based
+// on Barman cloud
 type BarmanArchiver struct {
 	Env                    []string
 	RunStreaming           func(cmd *exec.Cmd, cmdName string) (err error)
