@@ -21,14 +21,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
 	"math"
 	"os/exec"
 	"sync"
 	"time"
 
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
+
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
+	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
 )
 
 const (

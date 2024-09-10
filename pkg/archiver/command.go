@@ -23,7 +23,11 @@ import (
 // `requestedWALFile` is the name of the file whose archiving was requested by
 // PostgreSQL, and that file is always the first of the list and is always included.
 // `parallel` is the maximum number of WALs that we can archive in parallel
-func (archiver *WALArchiver) GatherWALFilesToArchive(ctx context.Context, requestedWALFile string, parallel int) (walList []string) {
+func (archiver *WALArchiver) GatherWALFilesToArchive(
+	ctx context.Context,
+	requestedWALFile string,
+	parallel int,
+) (walList []string) {
 	contextLog := logging.FromContext(ctx)
 	pgWalDirectory := path.Join(os.Getenv("PGDATA"), "pg_wal")
 	archiveStatusPath := path.Join(pgWalDirectory, "archive_status")

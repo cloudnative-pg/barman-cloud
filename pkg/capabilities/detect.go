@@ -19,11 +19,11 @@ package capabilities
 import (
 	"context"
 	"fmt"
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
 	"os/exec"
 	"regexp"
 
 	"github.com/blang/semver"
+	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
 )
 
 // capabilities stores the current Barman capabilities

@@ -44,9 +44,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os/exec"
+
 	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/catalog"
 	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
-	"os/exec"
 
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"

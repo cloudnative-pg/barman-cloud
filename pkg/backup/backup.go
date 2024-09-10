@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os/exec"
+	"strconv"
+
 	"github.com/blang/semver"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/execlog"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/postgres"
 	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
-	"os/exec"
-	"strconv"
 
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 	barmanCatalog "github.com/cloudnative-pg/plugin-barman-cloud/pkg/catalog"
@@ -25,7 +26,10 @@ type Command struct {
 }
 
 // NewBackupCommand creates a new barman backup command
-func NewBackupCommand(configuration *barmanTypes.BarmanObjectStoreConfiguration, capabilities *barmanCapabilities.Capabilities) *Command {
+func NewBackupCommand(
+	configuration *barmanTypes.BarmanObjectStoreConfiguration,
+	capabilities *barmanCapabilities.Capabilities,
+) *Command {
 	return &Command{
 		configuration: configuration,
 		capabilities:  capabilities,

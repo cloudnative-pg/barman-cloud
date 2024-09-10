@@ -20,12 +20,14 @@ package walarchive
 import (
 	"context"
 	"fmt"
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
-	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 	"math"
 	"os/exec"
 	"sync"
 	"time"
+
+	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+
+	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 )
 
 type BarmanArchiver struct {

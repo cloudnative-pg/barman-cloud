@@ -17,8 +17,9 @@ limitations under the License.
 package archiver
 
 import (
-	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
 	"strings"
+
+	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
 
 	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
 

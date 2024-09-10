@@ -19,11 +19,12 @@ package spool
 
 import (
 	"fmt"
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
 	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
 )
 
 // ErrorNonExistentFile is returned when the spool tried to work

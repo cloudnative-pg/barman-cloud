@@ -5,9 +5,10 @@
 package types
 
 import (
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"slices"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // EncryptionType encapsulated the available types of encryption

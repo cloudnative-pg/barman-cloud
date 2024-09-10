@@ -18,6 +18,7 @@ package command
 
 import (
 	"fmt"
+
 	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
 
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"

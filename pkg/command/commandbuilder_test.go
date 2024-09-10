@@ -17,8 +17,9 @@ limitations under the License.
 package command
 
 import (
-	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
 	"strings"
+
+	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -31,7 +32,6 @@ var _ = Describe("barmanCloudWalRestoreOptions", func() {
 		storageConf = &barmanTypes.BarmanObjectStoreConfiguration{
 			DestinationPath: "s3://bucket-name/",
 		}
-
 	})
 
 	It("should generate correct arguments without the wal stanza", func() {

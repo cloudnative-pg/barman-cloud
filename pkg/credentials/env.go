@@ -20,10 +20,12 @@ package credentials
 import (
 	"context"
 	"fmt"
-	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
-	corev1 "k8s.io/api/core/v1"
 	"os"
+
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
 )
 
 const (
