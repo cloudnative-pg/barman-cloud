@@ -24,7 +24,8 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/fileutils"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 )
 
 // ErrorNonExistentFile is returned when the spool tried to work
@@ -37,35 +38,24 @@ var ErrorNonExistentFile = fs.ErrNotExist
 // of the WAL we archived
 type WALSpool struct {
 	spoolDirectory string
-	utils          FileUtils
-}
-
-// FileUtils is a structure allowing the caller to inject
-// a set of functions to manipulate files
-type FileUtils struct {
-	EnsureDirectoryExists func(string) error
-	FileExists            func(string) (bool, error)
-	MoveFile              func(string, string) error
-	RemoveFile            func(fileName string) error
 }
 
 // New create new WAL spool
-func New(fileUtils FileUtils, spoolDirectory string) (*WALSpool, error) {
-	if err := fileUtils.EnsureDirectoryExists(spoolDirectory); err != nil {
+func New(spoolDirectory string) (*WALSpool, error) {
+	if err := fileutils.EnsureDirectoryExists(spoolDirectory); err != nil {
 		log.Warning("Cannot create the spool directory", "spoolDirectory", spoolDirectory)
 		return nil, fmt.Errorf("while creating spool directory: %w", err)
 	}
 
 	return &WALSpool{
 		spoolDirectory: spoolDirectory,
-		utils:          fileUtils,
 	}, nil
 }
 
 // Contains checks if a certain file is in the spool or not
 func (spool *WALSpool) Contains(walFile string) (bool, error) {
 	walFile = path.Base(walFile)
-	return spool.utils.FileExists(path.Join(spool.spoolDirectory, walFile))
+	return fileutils.FileExists(path.Join(spool.spoolDirectory, walFile))
 }
 
 // Remove removes a WAL file from the spool. If the WAL file doesn't
@@ -101,7 +91,7 @@ func (spool *WALSpool) MoveOut(walName, destination string) (err error) {
 	// volumes, such as moving files from an EmptyDir volume to the data
 	// directory.
 	// Given that, we rely on the old strategy to copy stuff around.
-	err = spool.utils.MoveFile(path.Join(spool.spoolDirectory, walName), destination)
+	err = fileutils.MoveFile(path.Join(spool.spoolDirectory, walName), destination)
 	if err != nil && os.IsNotExist(err) {
 		return ErrorNonExistentFile
 	}

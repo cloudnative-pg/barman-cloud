@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 	barmanCommand "github.com/cloudnative-pg/plugin-barman-cloud/pkg/command"
@@ -28,7 +28,7 @@ func (archiver *WALArchiver) GatherWALFilesToArchive(
 	requestedWALFile string,
 	parallel int,
 ) (walList []string) {
-	contextLog := logging.FromContext(ctx)
+	contextLog := log.FromContext(ctx)
 	pgWalDirectory := path.Join(os.Getenv("PGDATA"), "pg_wal")
 	archiveStatusPath := path.Join(pgWalDirectory, "archive_status")
 	noMoreWALFilesNeeded := errors.New("no more files needed")
@@ -98,6 +98,7 @@ func (archiver *WALArchiver) GatherWALFilesToArchive(
 // BarmanCloudWalArchiveOptions calculates the set of options to be
 // used with barman-cloud-wal-archive
 func (archiver *WALArchiver) BarmanCloudWalArchiveOptions(
+	ctx context.Context,
 	configuration *barmanTypes.BarmanObjectStoreConfiguration,
 	clusterName string,
 ) ([]string, error) {
@@ -147,7 +148,7 @@ func (archiver *WALArchiver) BarmanCloudWalArchiveOptions(
 		options = append(options, historyTags...)
 	}
 
-	options, err = barmanCommand.AppendCloudProviderOptionsFromConfiguration(options, configuration)
+	options, err = barmanCommand.AppendCloudProviderOptionsFromConfiguration(ctx, options, configuration)
 	if err != nil {
 		return nil, err
 	}

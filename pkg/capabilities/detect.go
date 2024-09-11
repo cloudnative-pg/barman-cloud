@@ -23,7 +23,7 @@ import (
 	"regexp"
 
 	"github.com/blang/semver"
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 )
 
 // capabilities stores the current Barman capabilities
@@ -32,7 +32,7 @@ var capabilities *Capabilities
 // detect barman-cloud executables presence and store the Capabilities
 // of the barman-cloud version it finds
 func detect(version *semver.Version) *Capabilities {
-	contextLogger := logging.FromContext(context.Background())
+	contextLogger := log.FromContext(context.Background())
 	newCapabilities := new(Capabilities)
 	if version == nil {
 		contextLogger.Info("Missing Barman Cloud installation in the operand image")
@@ -75,7 +75,7 @@ func detect(version *semver.Version) *Capabilities {
 		newCapabilities.HasS3 = true
 	}
 
-	contextLogger.V(0).Info("Detected Barman installation", "newCapabilities", newCapabilities)
+	contextLogger.Debug("Detected Barman installation", "newCapabilities", newCapabilities)
 
 	return newCapabilities
 }
@@ -88,7 +88,7 @@ var barmanCloudVersionRegex = regexp.MustCompile("barman-cloud.* (?P<Version>.*)
 // e.g. barman-cloud-backup, barman-cloud-wal-archive
 // It returns nil if the command is not found
 func getBarmanCloudVersion(command string) (*semver.Version, error) {
-	contextLogger := logging.FromContext(context.Background())
+	contextLogger := log.FromContext(context.Background())
 
 	_, err := exec.LookPath(command)
 	if err != nil {

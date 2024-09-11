@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 )
@@ -78,7 +78,7 @@ func (err *CloudRestoreError) IsRetriable() bool {
 
 // UnmarshalBarmanCloudRestoreExitCode returns the correct error
 // for a certain barman-cloud-restore exit code
-func UnmarshalBarmanCloudRestoreExitCode(exitCode int) error {
+func UnmarshalBarmanCloudRestoreExitCode(ctx context.Context, exitCode int) error {
 	if exitCode == 0 {
 		return nil
 	}
@@ -87,7 +87,7 @@ func UnmarshalBarmanCloudRestoreExitCode(exitCode int) error {
 	currentCapabilities, err := barmanCapabilities.CurrentCapabilities()
 	if err != nil {
 		// TODO: this function should really receive a context
-		logger := logging.FromContext(context.Background())
+		logger := log.FromContext(ctx)
 		logger.Error(err, "error while detecting Barman capabilities")
 
 		// We default to old exit codes when we could not detect

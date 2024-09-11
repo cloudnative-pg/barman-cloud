@@ -26,7 +26,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/execlog"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
@@ -70,14 +71,13 @@ type Result struct {
 // New creates a new WAL restorer
 func New(
 	ctx context.Context,
-	utils spool.FileUtils,
 	env []string,
 	spoolDirectory string,
 ) (restorer *WALRestorer, err error) {
 	contextLog := log.FromContext(ctx)
 	var walRecoverSpool *spool.WALSpool
 
-	if walRecoverSpool, err = spool.New(utils, spoolDirectory); err != nil {
+	if walRecoverSpool, err = spool.New(spoolDirectory); err != nil {
 		contextLog.Info("Cannot initialize the WAL spool", "spoolDirectory", spoolDirectory)
 		return nil, fmt.Errorf("while creating spool directory: %w", err)
 	}
@@ -152,7 +152,6 @@ func (restorer *WALRestorer) RestoreList(
 	fetchList []string,
 	destinationPath string,
 	options []string,
-	runStream func(cmd *exec.Cmd, cmdName string) error,
 ) (resultList []Result) {
 	resultList = make([]Result, len(fetchList))
 	contextLog := log.FromContext(ctx)
@@ -172,7 +171,7 @@ func (restorer *WALRestorer) RestoreList(
 			}
 
 			result.StartTime = time.Now()
-			result.Err = restorer.Restore(runStream, fetchList[walIndex], result.DestinationPath, options)
+			result.Err = restorer.Restore(fetchList[walIndex], result.DestinationPath, options)
 			result.EndTime = time.Now()
 
 			elapsedWalTime := result.EndTime.Sub(result.StartTime)
@@ -218,7 +217,6 @@ func (restorer *WALRestorer) RestoreList(
 
 // Restore restores a WAL file from the object store
 func (restorer *WALRestorer) Restore(
-	runStream func(cmd *exec.Cmd, cmdName string) error,
 	walName, destinationPath string,
 	baseOptions []string,
 ) error {
@@ -247,7 +245,7 @@ func (restorer *WALRestorer) Restore(
 		options...) // #nosec G204
 	barmanCloudWalRestoreCmd.Env = restorer.env
 
-	err := runStream(barmanCloudWalRestoreCmd, barmanCapabilities.BarmanCloudWalRestore)
+	err := execlog.RunStreaming(barmanCloudWalRestoreCmd, barmanCapabilities.BarmanCloudWalRestore)
 	if err == nil {
 		return nil
 	}

@@ -33,8 +33,8 @@ var _ = Describe("barmanCloudWalRestoreOptions", func() {
 		}
 	})
 
-	It("should generate correct arguments without the wal stanza", func() {
-		options, err := CloudWalRestoreOptions(storageConf, "test-cluster")
+	It("should generate correct arguments without the wal stanza", func(ctx SpecContext) {
+		options, err := CloudWalRestoreOptions(ctx, storageConf, "test-cluster")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(strings.Join(options, " ")).
 			To(
@@ -43,12 +43,12 @@ var _ = Describe("barmanCloudWalRestoreOptions", func() {
 				))
 	})
 
-	It("should generate correct arguments", func() {
+	It("should generate correct arguments", func(ctx SpecContext) {
 		extraOptions := []string{"--read-timeout=60", "-vv"}
 		storageConf.Wal = &barmanTypes.WalBackupConfiguration{
 			RestoreAdditionalCommandArgs: extraOptions,
 		}
-		options, err := CloudWalRestoreOptions(storageConf, "test-cluster")
+		options, err := CloudWalRestoreOptions(ctx, storageConf, "test-cluster")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(strings.Join(options, " ")).
 			To(

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
@@ -22,7 +22,7 @@ func DeleteBackupsByPolicy(
 	env []string,
 	retentionPolicy string,
 ) error {
-	contextLogger := logging.FromContext(ctx).WithName("barman")
+	contextLogger := log.FromContext(ctx).WithName("barman")
 
 	capabilities, err := barmanCapabilities.CurrentCapabilities()
 	if err != nil {
@@ -42,7 +42,7 @@ func DeleteBackupsByPolicy(
 		options = append(options, "--endpoint-url", barmanConfiguration.EndpointURL)
 	}
 
-	options, err = AppendCloudProviderOptionsFromConfiguration(options, barmanConfiguration)
+	options, err = AppendCloudProviderOptionsFromConfiguration(ctx, options, barmanConfiguration)
 	if err != nil {
 		return err
 	}

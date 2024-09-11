@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
@@ -28,6 +28,7 @@ import (
 
 // CloudWalRestoreOptions returns the options needed to execute the barman command successfully
 func CloudWalRestoreOptions(
+	ctx context.Context,
 	configuration *barmanTypes.BarmanObjectStoreConfiguration,
 	clusterName string,
 ) ([]string, error) {
@@ -39,7 +40,7 @@ func CloudWalRestoreOptions(
 			configuration.EndpointURL)
 	}
 
-	options, err := AppendCloudProviderOptionsFromConfiguration(options, configuration)
+	options, err := AppendCloudProviderOptionsFromConfiguration(ctx, options, configuration)
 	if err != nil {
 		return nil, err
 	}
@@ -58,25 +59,30 @@ func CloudWalRestoreOptions(
 // AppendCloudProviderOptionsFromConfiguration takes an options array and adds the cloud provider specified
 // in the Barman configuration object
 func AppendCloudProviderOptionsFromConfiguration(
+	ctx context.Context,
 	options []string,
 	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
 ) ([]string, error) {
-	return appendCloudProviderOptions(options, barmanConfiguration.BarmanCredentials)
+	return appendCloudProviderOptions(ctx, options, barmanConfiguration.BarmanCredentials)
 }
 
 // AppendCloudProviderOptionsFromBackup takes an options array and adds the cloud provider specified
 // in the Backup object
 func AppendCloudProviderOptionsFromBackup(
+	ctx context.Context,
 	options []string,
 	credentials barmanTypes.BarmanCredentials,
 ) ([]string, error) {
-	return appendCloudProviderOptions(options, credentials)
+	return appendCloudProviderOptions(ctx, options, credentials)
 }
 
 // appendCloudProviderOptions takes an options array and adds the cloud provider specified as arguments
-func appendCloudProviderOptions(options []string, credentials barmanTypes.BarmanCredentials) ([]string, error) {
-	// TODO: this function should really receive a context
-	logger := logging.FromContext(context.Background())
+func appendCloudProviderOptions(
+	ctx context.Context,
+	options []string,
+	credentials barmanTypes.BarmanCredentials,
+) ([]string, error) {
+	logger := log.FromContext(ctx)
 
 	capabilities, err := barmanCapabilities.CurrentCapabilities()
 	if err != nil {

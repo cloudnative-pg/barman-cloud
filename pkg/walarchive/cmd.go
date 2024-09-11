@@ -25,7 +25,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/execlog"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 )
@@ -34,7 +35,6 @@ import (
 // on Barman cloud
 type BarmanArchiver struct {
 	Env                    []string
-	RunStreaming           func(cmd *exec.Cmd, cmdName string) (err error)
 	Touch                  func(walFile string) error
 	RemoveEmptyFileArchive func() error
 }
@@ -56,8 +56,12 @@ type WALArchiverResult struct {
 
 // Archive archives a certain WAL file using barman-cloud-wal-archive.
 // See archiveWALFileList for the meaning of the parameters
-func (archiver *BarmanArchiver) Archive(walName string, baseOptions []string) error {
-	contextLogger := logging.FromContext(context.Background())
+func (archiver *BarmanArchiver) Archive(
+	ctx context.Context,
+	walName string,
+	baseOptions []string,
+) error {
+	contextLogger := log.FromContext(ctx)
 	optionsLength := len(baseOptions)
 	if optionsLength >= math.MaxInt-1 {
 		return fmt.Errorf("can't archive wal file %v, options too long", walName)
@@ -66,7 +70,7 @@ func (archiver *BarmanArchiver) Archive(walName string, baseOptions []string) er
 	copy(options, baseOptions)
 	options = append(options, walName)
 
-	contextLogger.V(0).Info("Executing "+barmanCapabilities.BarmanCloudWalArchive,
+	contextLogger.Info("Executing "+barmanCapabilities.BarmanCloudWalArchive,
 		"walName", walName,
 		"options", options,
 	)
@@ -74,7 +78,7 @@ func (archiver *BarmanArchiver) Archive(walName string, baseOptions []string) er
 	barmanCloudWalArchiveCmd := exec.Command(barmanCapabilities.BarmanCloudWalArchive, options...) // #nosec G204
 	barmanCloudWalArchiveCmd.Env = archiver.Env
 
-	err := archiver.RunStreaming(barmanCloudWalArchiveCmd, barmanCapabilities.BarmanCloudWalArchive)
+	err := execlog.RunStreaming(barmanCloudWalArchiveCmd, barmanCapabilities.BarmanCloudWalArchive)
 	if err != nil {
 		contextLogger.Error(err, "Error invoking "+barmanCapabilities.BarmanCloudWalArchive,
 			"walName", walName,
@@ -95,7 +99,7 @@ func (archiver *BarmanArchiver) ArchiveList(
 	walNames []string,
 	options []string,
 ) (result []WALArchiverResult) {
-	contextLog := logging.FromContext(ctx)
+	contextLog := log.FromContext(ctx)
 	result = make([]WALArchiverResult, len(walNames))
 
 	var waitGroup sync.WaitGroup
@@ -105,7 +109,7 @@ func (archiver *BarmanArchiver) ArchiveList(
 			walStatus := &result[walIndex]
 			walStatus.WalName = walNames[walIndex]
 			walStatus.StartTime = time.Now()
-			walStatus.Err = archiver.Archive(walNames[walIndex], options)
+			walStatus.Err = archiver.Archive(ctx, walNames[walIndex], options)
 			walStatus.EndTime = time.Now()
 			if walStatus.Err == nil && walIndex != 0 {
 				walStatus.Err = archiver.Touch(walNames[walIndex])
@@ -113,7 +117,7 @@ func (archiver *BarmanArchiver) ArchiveList(
 
 			elapsedWalTime := walStatus.EndTime.Sub(walStatus.StartTime)
 			if walStatus.Err != nil {
-				contextLog.V(1).Info(
+				contextLog.Warning(
 					"Failed archiving WAL: PostgreSQL will retry",
 					"walName", walStatus.WalName,
 					"startTime", walStatus.StartTime,
@@ -144,7 +148,7 @@ func (archiver *BarmanArchiver) ArchiveList(
 // since in this case the command barman-cloud-check-wal-archive will fail if the bucket exist and
 // contain wal files inside
 func (archiver *BarmanArchiver) CheckWalArchiveDestination(ctx context.Context, options []string) error {
-	contextLogger := logging.FromContext(ctx)
+	contextLogger := log.FromContext(ctx)
 	contextLogger.Info("barman-cloud-check-wal-archive checking the first wal")
 
 	// Check barman compatibility
@@ -154,19 +158,19 @@ func (archiver *BarmanArchiver) CheckWalArchiveDestination(ctx context.Context, 
 	}
 
 	if !capabilities.HasCheckWalArchive {
-		contextLogger.V(1).Info("barman-cloud-check-wal-archive cannot be used, is recommended to upgrade" +
+		contextLogger.Warning("barman-cloud-check-wal-archive cannot be used, is recommended to upgrade" +
 			" to version 2.18 or above.")
 		return nil
 	}
 
-	contextLogger.V(0).Info("Executing "+barmanCapabilities.BarmanCloudCheckWalArchive,
+	contextLogger.Trace("Executing "+barmanCapabilities.BarmanCloudCheckWalArchive,
 		"options", options,
 	)
 
 	barmanCloudWalArchiveCmd := exec.Command(barmanCapabilities.BarmanCloudCheckWalArchive, options...) // #nosec G204
 	barmanCloudWalArchiveCmd.Env = archiver.Env
 
-	err = archiver.RunStreaming(barmanCloudWalArchiveCmd, barmanCapabilities.BarmanCloudCheckWalArchive)
+	err = execlog.RunStreaming(barmanCloudWalArchiveCmd, barmanCapabilities.BarmanCloudCheckWalArchive)
 	if err != nil {
 		contextLogger.Error(err, "Error invoking "+barmanCapabilities.BarmanCloudCheckWalArchive,
 			"options", options,
@@ -175,7 +179,7 @@ func (archiver *BarmanArchiver) CheckWalArchiveDestination(ctx context.Context, 
 		return fmt.Errorf("unexpected failure invoking %s: %w", barmanCapabilities.BarmanCloudWalArchive, err)
 	}
 
-	contextLogger.V(0).Info("barman-cloud-check-wal-archive command execution completed")
+	contextLogger.Trace("barman-cloud-check-wal-archive command execution completed")
 
 	return nil
 }

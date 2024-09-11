@@ -46,7 +46,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/catalog"
@@ -61,7 +61,7 @@ func executeQueryCommand(
 	additionalOptions []string,
 	env []string,
 ) (string, error) {
-	contextLogger := logging.FromContext(ctx).WithName("barman")
+	contextLogger := log.FromContext(ctx).WithName("barman")
 
 	options := []string{"--format", "json"}
 
@@ -69,7 +69,7 @@ func executeQueryCommand(
 		options = append(options, "--endpoint-url", barmanConfiguration.EndpointURL)
 	}
 
-	options, err := AppendCloudProviderOptionsFromConfiguration(options, barmanConfiguration)
+	options, err := AppendCloudProviderOptionsFromConfiguration(ctx, options, barmanConfiguration)
 	if err != nil {
 		return "", err
 	}
@@ -104,7 +104,7 @@ func GetBackupList(
 	serverName string,
 	env []string,
 ) (*catalog.Catalog, error) {
-	contextLogger := logging.FromContext(ctx).WithName("barman")
+	contextLogger := log.FromContext(ctx).WithName("barman")
 
 	rawJSON, err := executeQueryCommand(
 		ctx,
@@ -136,7 +136,7 @@ func GetBackupByName(
 	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
 	env []string,
 ) (*catalog.BarmanBackup, error) {
-	contextLogger := logging.FromContext(ctx)
+	contextLogger := log.FromContext(ctx)
 
 	rawJSON, err := executeQueryCommand(
 		ctx,
@@ -150,7 +150,7 @@ func GetBackupByName(
 		return nil, err
 	}
 
-	contextLogger.V(4).Info("raw backup barman object", "rawBarmanObject", rawJSON)
+	contextLogger.Debug("raw backup barman object", "rawBarmanObject", rawJSON)
 
 	return catalog.NewBackupFromBarmanCloudBackupShow(rawJSON)
 }
@@ -162,7 +162,7 @@ func GetLatestBackup(
 	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
 	env []string,
 ) (*catalog.BarmanBackup, error) {
-	contextLogger := logging.FromContext(ctx)
+	contextLogger := log.FromContext(ctx)
 	// Extracting the latest backup using barman-cloud-backup-list
 	backupList, err := GetBackupList(ctx, barmanConfiguration, serverName, env)
 	if err != nil {
@@ -170,7 +170,7 @@ func GetLatestBackup(
 		return nil, err
 	}
 
-	contextLogger.V(4).Info("raw backup list object", "backupList", backupList)
+	contextLogger.Debug("raw backup list object", "backupList", backupList)
 
 	// We have just made a new backup, if the backup list is empty
 	// something is going wrong in the cloud storage

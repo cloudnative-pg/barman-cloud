@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/utils"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/types"
 )
 
 // Catalog is a list of backup infos belonging to the same server
@@ -107,7 +107,6 @@ type recoveryTargetAdapter interface {
 // FindBackupInfo finds the backup info that should be used to file
 // a PITR request via target parameters specified within `RecoveryTarget`
 func (catalog *Catalog) FindBackupInfo(
-	lsnFactory lsnFactory,
 	recoveryTarget recoveryTargetAdapter,
 ) (*BarmanBackup, error) {
 	// Check that BackupID is not empty. In such case, always use the
@@ -133,29 +132,18 @@ func (catalog *Catalog) FindBackupInfo(
 
 	// The second step is to check any LSN based research
 	if t := recoveryTarget.GetTargetLSN(); t != "" {
-		return catalog.findClosestBackupFromTargetLSN(lsnFactory, t, targetTLI)
+		return catalog.findClosestBackupFromTargetLSN(t, targetTLI)
 	}
 
 	// The fallback is to use the latest available backup in chronological order
 	return catalog.findLatestBackupFromTimeline(targetTLI), nil
 }
 
-// LsnAdapter is a common interface between types representing LSNs
-// This interface should not be needed anymore once we've
-// a common library between cloudnative-pg and the barman plugin
-type LsnAdapter interface {
-	Parse() (int64, error)
-	LessAdapter(other LsnAdapter) bool
-}
-
-type lsnFactory func(string) LsnAdapter
-
 func (catalog *Catalog) findClosestBackupFromTargetLSN(
-	lsnFactory lsnFactory,
 	targetLSNString string,
 	targetTLI string,
 ) (*BarmanBackup, error) {
-	targetLSN := lsnFactory(targetLSNString)
+	targetLSN := types.LSN(targetLSNString)
 	if _, err := targetLSN.Parse(); err != nil {
 		return nil, fmt.Errorf("while parsing recovery target targetLSN: %s", err.Error())
 	}
@@ -167,7 +155,7 @@ func (catalog *Catalog) findClosestBackupFromTargetLSN(
 		if (strconv.Itoa(barmanBackup.TimeLine) == targetTLI ||
 			// if targetTLI is not an integer, it will be ignored actually
 			currentTLIRegex.MatchString(targetTLI)) &&
-			lsnFactory(barmanBackup.BeginLSN).LessAdapter(targetLSN) {
+			types.LSN(barmanBackup.BeginLSN).Less(targetLSN) {
 			return &catalog.List[i], nil
 		}
 	}
@@ -178,7 +166,7 @@ func (catalog *Catalog) findClosestBackupFromTargetTime(
 	targetTimeString string,
 	targetTLI string,
 ) (*BarmanBackup, error) {
-	targetTime, err := utils.ParseTargetTime(nil, targetTimeString)
+	targetTime, err := types.ParseTargetTime(nil, targetTimeString)
 	if err != nil {
 		return nil, fmt.Errorf("while parsing recovery target targetTime: %s", err.Error())
 	}

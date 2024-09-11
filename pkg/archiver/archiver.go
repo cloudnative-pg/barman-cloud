@@ -20,10 +20,9 @@ package archiver
 import (
 	"context"
 	"fmt"
-	"os/exec"
 	"time"
 
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 
 	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/command"
 	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
@@ -44,9 +43,6 @@ type WALArchiver struct {
 
 	// this should become a grpc interface
 	barmanArchiver *walarchive.BarmanArchiver
-
-	// Supporting functions
-	FileUtils spool.FileUtils
 }
 
 // WALArchiverResult contains the result of the archival of one WAL
@@ -70,26 +66,22 @@ func New(
 	env []string,
 	spoolDirectory string,
 	pgDataDirectory string,
-	fileUtils spool.FileUtils,
-	runStreaming func(cmd *exec.Cmd, cmdName string) (err error),
 	removeEmptyFileArchive func() error,
 ) (archiver *WALArchiver, err error) {
-	contextLog := logging.FromContext(ctx)
+	contextLog := log.FromContext(ctx)
 	var walArchiveSpool *spool.WALSpool
 
-	if walArchiveSpool, err = spool.New(fileUtils, spoolDirectory); err != nil {
+	if walArchiveSpool, err = spool.New(spoolDirectory); err != nil {
 		contextLog.Info("Cannot initialize the WAL spool", "spoolDirectory", spoolDirectory)
 		return nil, fmt.Errorf("while creating spool directory: %w", err)
 	}
 
 	archiver = &WALArchiver{
-		FileUtils:       fileUtils,
 		spool:           walArchiveSpool,
 		env:             env,
 		pgDataDirectory: pgDataDirectory,
 		barmanArchiver: &walarchive.BarmanArchiver{
 			Env:                    env,
-			RunStreaming:           runStreaming,
 			Touch:                  walArchiveSpool.Touch,
 			RemoveEmptyFileArchive: removeEmptyFileArchive,
 		},
@@ -142,6 +134,7 @@ func (archiver *WALArchiver) CheckWalArchiveDestination(ctx context.Context, opt
 // BarmanCloudCheckWalArchiveOptions create the options needed for the `barman-cloud-check-wal-archive`
 // command.
 func (archiver *WALArchiver) BarmanCloudCheckWalArchiveOptions(
+	ctx context.Context,
 	configuration *types.BarmanObjectStoreConfiguration,
 	clusterName string,
 ) ([]string, error) {
@@ -153,7 +146,7 @@ func (archiver *WALArchiver) BarmanCloudCheckWalArchiveOptions(
 			configuration.EndpointURL)
 	}
 
-	options, err := command.AppendCloudProviderOptionsFromConfiguration(options, configuration)
+	options, err := command.AppendCloudProviderOptionsFromConfiguration(ctx, options, configuration)
 	if err != nil {
 		return nil, err
 	}

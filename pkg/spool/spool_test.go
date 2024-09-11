@@ -20,7 +20,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/fileutils"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/fileutils"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -32,8 +32,6 @@ var _ = Describe("Spool", func() {
 	var spool *WALSpool
 
 	_ = BeforeEach(func() {
-		Skip("waiting for cloudnative-pg-machinery")
-
 		var err error
 		tmpDir, err = os.MkdirTemp("", "spool-test-")
 		Expect(err).NotTo(HaveOccurred())
@@ -41,7 +39,7 @@ var _ = Describe("Spool", func() {
 		tmpDir2, err = os.MkdirTemp("", "spool-test-tmp-")
 		Expect(err).NotTo(HaveOccurred())
 
-		spool, err = New(FileUtils{}, tmpDir)
+		spool, err = New(tmpDir)
 		Expect(err).NotTo(HaveOccurred())
 	})
 

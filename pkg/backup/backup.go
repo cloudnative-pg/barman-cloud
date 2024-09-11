@@ -8,9 +8,8 @@ import (
 	"strconv"
 
 	"github.com/blang/semver"
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/execlog"
-	"github.com/cloudnative-pg/cloudnative-pg/pkg/postgres"
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/logging"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/execlog"
+	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
 
 	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
 	barmanCatalog "github.com/cloudnative-pg/plugin-barman-cloud/pkg/catalog"
@@ -80,6 +79,7 @@ func (b *Command) GetDataConfiguration(
 // GetBarmanCloudBackupOptions extract the list of command line options to be used with
 // barman-cloud-backup
 func (b *Command) GetBarmanCloudBackupOptions(
+	ctx context.Context,
 	backupName string,
 	serverName string,
 	exec barmanCapabilities.LegacyExecutor,
@@ -112,7 +112,7 @@ func (b *Command) GetBarmanCloudBackupOptions(
 			b.configuration.EndpointURL)
 	}
 
-	options, err = barmanCommand.AppendCloudProviderOptionsFromConfiguration(options, b.configuration)
+	options, err = barmanCommand.AppendCloudProviderOptionsFromConfiguration(ctx, options, b.configuration)
 	if err != nil {
 		return nil, err
 	}
@@ -174,10 +174,11 @@ func (b *Command) Take(
 	serverName string,
 	env []string,
 	legacyExecutor barmanCapabilities.LegacyExecutor,
+	backupTemporaryDirectory string,
 ) error {
-	log := logging.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	options, backupErr := b.GetBarmanCloudBackupOptions(backupName, serverName, legacyExecutor)
+	options, backupErr := b.GetBarmanCloudBackupOptions(ctx, backupName, serverName, legacyExecutor)
 	if backupErr != nil {
 		log.Error(backupErr, "while getting barman-cloud-backup options")
 		return backupErr
@@ -188,7 +189,7 @@ func (b *Command) Take(
 
 	cmd := exec.Command(barmanCapabilities.BarmanCloudBackup, options...) // #nosec G204
 	cmd.Env = env
-	cmd.Env = append(cmd.Env, "TMPDIR="+postgres.BackupTemporaryDirectory)
+	cmd.Env = append(cmd.Env, "TMPDIR="+backupTemporaryDirectory)
 	if err := execlog.RunStreaming(cmd, barmanCapabilities.BarmanCloudBackup); err != nil {
 		const badArgumentsErrorCode = "3"
 		if err.Error() == badArgumentsErrorCode {

@@ -19,7 +19,6 @@ package archiver
 import (
 	"strings"
 
-	barmanSpool "github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
 	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -40,14 +39,12 @@ var _ = Describe("barmanCloudWalArchiveOptions", func() {
 	})
 
 	It("should generate correct arguments", func(ctx SpecContext) {
-		archiver, err := New(
-			ctx, nil, "spool", "pgdata",
-			barmanSpool.FileUtils{}, nil, nil)
+		archiver, err := New(ctx, nil, "spool", "pgdata", nil)
 		Expect(err).ToNot(HaveOccurred())
 
 		extraOptions := []string{"--min-chunk-size=5MB", "--read-timeout=60", "-vv"}
 		config.Wal.ArchiveAdditionalCommandArgs = extraOptions
-		options, err := archiver.BarmanCloudWalArchiveOptions(config, "test-cluster")
+		options, err := archiver.BarmanCloudWalArchiveOptions(ctx, config, "test-cluster")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(strings.Join(options, " ")).
 			To(
@@ -69,11 +66,10 @@ var _ = Describe("barmanCloudWalArchiveOptions", func() {
 		config.Wal.ArchiveAdditionalCommandArgs = extraOptions
 
 		archiver, err := New(
-			ctx, nil, "spool", "pgdata",
-			barmanSpool.FileUtils{}, nil, nil)
+			ctx, nil, "spool", "pgdata", nil)
 		Expect(err).ToNot(HaveOccurred())
 
-		options, err := archiver.BarmanCloudWalArchiveOptions(config, "test-cluster")
+		options, err := archiver.BarmanCloudWalArchiveOptions(ctx, config, "test-cluster")
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(strings.Join(options, " ")).
