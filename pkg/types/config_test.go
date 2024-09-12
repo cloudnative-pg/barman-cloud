@@ -1,6 +1,7 @@
 package types
 
 import (
+	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -105,20 +106,20 @@ var _ = Describe("azure credentials", func() {
 
 	It("contain only one of storage account key and SAS token", func() {
 		azureCredentials := AzureCredentials{
-			StorageAccount: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "storageAccount",
 			},
-			StorageKey: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			StorageKey: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "storageKey",
 			},
-			StorageSasToken: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			StorageSasToken: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "sasToken",
@@ -127,8 +128,8 @@ var _ = Describe("azure credentials", func() {
 		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
 
 		azureCredentials = AzureCredentials{
-			StorageAccount: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "storageAccount",
@@ -141,14 +142,14 @@ var _ = Describe("azure credentials", func() {
 
 	It("is correct when the storage key is used", func() {
 		azureCredentials := AzureCredentials{
-			StorageAccount: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "storageAccount",
 			},
-			StorageKey: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			StorageKey: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "storageKey",
@@ -160,15 +161,15 @@ var _ = Describe("azure credentials", func() {
 
 	It("is correct when the sas token is used", func() {
 		azureCredentials := AzureCredentials{
-			StorageAccount: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "storageAccount",
 			},
 			StorageKey: nil,
-			StorageSasToken: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			StorageSasToken: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "sasToken",
@@ -179,8 +180,8 @@ var _ = Describe("azure credentials", func() {
 
 	It("is correct even if only the connection string is specified", func() {
 		azureCredentials := AzureCredentials{
-			ConnectionString: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			ConnectionString: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "connectionString",
@@ -191,14 +192,14 @@ var _ = Describe("azure credentials", func() {
 
 	It("it is not correct when the connection string is specified with other parameters", func() {
 		azureCredentials := AzureCredentials{
-			ConnectionString: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			ConnectionString: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "connectionString",
 			},
-			StorageAccount: &SecretKeySelector{
-				LocalObjectReference: LocalObjectReference{
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
 				},
 				Key: "storageAccount",

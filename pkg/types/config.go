@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
@@ -66,19 +67,19 @@ type BarmanCredentials struct {
 type S3Credentials struct {
 	// The reference to the access key id
 	// +optional
-	AccessKeyIDReference *SecretKeySelector `json:"accessKeyId,omitempty"`
+	AccessKeyIDReference *machineryapi.SecretKeySelector `json:"accessKeyId,omitempty"`
 
 	// The reference to the secret access key
 	// +optional
-	SecretAccessKeyReference *SecretKeySelector `json:"secretAccessKey,omitempty"`
+	SecretAccessKeyReference *machineryapi.SecretKeySelector `json:"secretAccessKey,omitempty"`
 
 	// The reference to the secret containing the region name
 	// +optional
-	RegionReference *SecretKeySelector `json:"region,omitempty"`
+	RegionReference *machineryapi.SecretKeySelector `json:"region,omitempty"`
 
 	// The references to the session key
 	// +optional
-	SessionToken *SecretKeySelector `json:"sessionToken,omitempty"`
+	SessionToken *machineryapi.SecretKeySelector `json:"sessionToken,omitempty"`
 
 	// Use the role based authentication without providing explicitly the keys.
 	// +optional
@@ -97,21 +98,21 @@ type S3Credentials struct {
 type AzureCredentials struct {
 	// The connection string to be used
 	// +optional
-	ConnectionString *SecretKeySelector `json:"connectionString,omitempty"`
+	ConnectionString *machineryapi.SecretKeySelector `json:"connectionString,omitempty"`
 
 	// The storage account where to upload data
 	// +optional
-	StorageAccount *SecretKeySelector `json:"storageAccount,omitempty"`
+	StorageAccount *machineryapi.SecretKeySelector `json:"storageAccount,omitempty"`
 
 	// The storage account key to be used in conjunction
 	// with the storage account name
 	// +optional
-	StorageKey *SecretKeySelector `json:"storageKey,omitempty"`
+	StorageKey *machineryapi.SecretKeySelector `json:"storageKey,omitempty"`
 
 	// A shared-access-signature to be used in conjunction with
 	// the storage account name
 	// +optional
-	StorageSasToken *SecretKeySelector `json:"storageSasToken,omitempty"`
+	StorageSasToken *machineryapi.SecretKeySelector `json:"storageSasToken,omitempty"`
 
 	// Use the Azure AD based authentication without providing explicitly the keys.
 	// +optional
@@ -123,28 +124,12 @@ type AzureCredentials struct {
 type GoogleCredentials struct {
 	// The secret containing the Google Cloud Storage JSON file with the credentials
 	// +optional
-	ApplicationCredentials *SecretKeySelector `json:"applicationCredentials,omitempty"`
+	ApplicationCredentials *machineryapi.SecretKeySelector `json:"applicationCredentials,omitempty"`
 
 	// If set to true, will presume that it's running inside a GKE environment,
 	// default to false.
 	// +optional
 	GKEEnvironment bool `json:"gkeEnvironment,omitempty"`
-}
-
-// SecretKeySelector contains enough information to let you locate
-// the key of a Secret
-type SecretKeySelector struct {
-	// The name of the secret in the pod's namespace to select from.
-	LocalObjectReference `json:",inline"`
-	// The key to select
-	Key string `json:"key"`
-}
-
-// LocalObjectReference contains enough information to let you locate a
-// local object with a known type inside the same namespace
-type LocalObjectReference struct {
-	// Name of the referent.
-	Name string `json:"name"`
 }
 
 // BarmanObjectStoreConfiguration contains the backup configuration
@@ -162,7 +147,7 @@ type BarmanObjectStoreConfiguration struct {
 	// Useful when using self-signed certificates to avoid
 	// errors with certificate issuer and barman-cloud-wal-archive
 	// +optional
-	EndpointCA *SecretKeySelector `json:"endpointCA,omitempty"`
+	EndpointCA *machineryapi.SecretKeySelector `json:"endpointCA,omitempty"`
 
 	// The path where to store the backup (i.e. s3://bucket/path/to/folder)
 	// this path, with different destination folders, will be used for WALs
