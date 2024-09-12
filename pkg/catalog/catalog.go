@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/types"
+	"github.com/cloudnative-pg/machinery/pkg/types"
 )
 
 // Catalog is a list of backup infos belonging to the same server

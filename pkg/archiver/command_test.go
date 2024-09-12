@@ -19,7 +19,7 @@ package archiver
 import (
 	"strings"
 
-	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
+	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

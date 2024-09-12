@@ -20,10 +20,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
+	"github.com/cloudnative-pg/machinery/pkg/log"
 
-	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
-	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
+	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
+	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
 )
 
 // CloudWalRestoreOptions returns the options needed to execute the barman command successfully

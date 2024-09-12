@@ -20,9 +20,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
+	"github.com/cloudnative-pg/machinery/pkg/log"
 
-	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
+	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
 )
 
 const (

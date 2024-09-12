@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
+	"github.com/cloudnative-pg/machinery/pkg/log"
 
-	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
-	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
-	barmanUtils "github.com/cloudnative-pg/plugin-barman-cloud/pkg/utils"
+	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
+	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
+	barmanUtils "github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 // DeleteBackupsByPolicy executes a command that deletes backups, given the Barman object store configuration,

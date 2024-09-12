@@ -8,14 +8,14 @@ import (
 	"strconv"
 
 	"github.com/blang/semver"
-	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/execlog"
-	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
+	"github.com/cloudnative-pg/machinery/pkg/execlog"
+	"github.com/cloudnative-pg/machinery/pkg/log"
 
-	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
-	barmanCatalog "github.com/cloudnative-pg/plugin-barman-cloud/pkg/catalog"
-	barmanCommand "github.com/cloudnative-pg/plugin-barman-cloud/pkg/command"
-	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
-	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/utils"
+	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
+	barmanCatalog "github.com/cloudnative-pg/barman-cloud/pkg/catalog"
+	barmanCommand "github.com/cloudnative-pg/barman-cloud/pkg/command"
+	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 // Command represents a barman backup command

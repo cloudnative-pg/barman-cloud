@@ -22,12 +22,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
+	"github.com/cloudnative-pg/machinery/pkg/log"
 
-	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/command"
-	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/spool"
-	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
-	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/walarchive"
+	"github.com/cloudnative-pg/barman-cloud/pkg/command"
+	"github.com/cloudnative-pg/barman-cloud/pkg/spool"
+	"github.com/cloudnative-pg/barman-cloud/pkg/types"
+	"github.com/cloudnative-pg/barman-cloud/pkg/walarchive"
 )
 
 // WALArchiver is a structure containing every info need to archive a set of WAL files

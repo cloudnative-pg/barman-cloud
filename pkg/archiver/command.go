@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/cloudnative-pg/cloudnative-pg-machinery/pkg/log"
+	"github.com/cloudnative-pg/machinery/pkg/log"
 
-	barmanCapabilities "github.com/cloudnative-pg/plugin-barman-cloud/pkg/capabilities"
-	barmanCommand "github.com/cloudnative-pg/plugin-barman-cloud/pkg/command"
-	barmanTypes "github.com/cloudnative-pg/plugin-barman-cloud/pkg/types"
-	"github.com/cloudnative-pg/plugin-barman-cloud/pkg/utils"
+	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
+	barmanCommand "github.com/cloudnative-pg/barman-cloud/pkg/command"
+	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 // GatherWALFilesToArchive reads from the archived status the list of WAL files
