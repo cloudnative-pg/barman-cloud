@@ -185,7 +185,7 @@ func (b *Command) Take(
 	}
 
 	// record the backup beginning
-	log.Info("Starting barman-cloud-backup", "options", options, "backupName", backupName)
+	log.Info("Starting barman-cloud-backup", "options", options)
 
 	cmd := exec.Command(barmanCapabilities.BarmanCloudBackup, options...) // #nosec G204
 	cmd.Env = env
