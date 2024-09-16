@@ -20,9 +20,9 @@ package credentials
 import (
 	"context"
 	"fmt"
-	"os"
 
 	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
+	"github.com/cloudnative-pg/machinery/pkg/fileutils"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -61,7 +61,6 @@ const (
 // given the configuration inside the cluster
 func EnvSetBackupCloudCredentials(
 	ctx context.Context,
-	fileUtils FileUtils,
 	c client.Client,
 	namespace string,
 	configuration *barmanTypes.BarmanObjectStoreConfiguration,
@@ -73,14 +72,13 @@ func EnvSetBackupCloudCredentials(
 		env = append(env, fmt.Sprintf("REQUESTS_CA_BUNDLE=%s", BarmanBackupEndpointCACertificateLocation))
 	}
 
-	return envSetCloudCredentials(ctx, fileUtils, c, namespace, configuration, env)
+	return envSetCloudCredentials(ctx, c, namespace, configuration, env)
 }
 
 // EnvSetRestoreCloudCredentials sets the AWS environment variables needed for restores
 // given the configuration inside the cluster
 func EnvSetRestoreCloudCredentials(
 	ctx context.Context,
-	fileUtils FileUtils,
 	c client.Client,
 	namespace string,
 	configuration *barmanTypes.BarmanObjectStoreConfiguration,
@@ -91,14 +89,13 @@ func EnvSetRestoreCloudCredentials(
 	} else if configuration.EndpointCA != nil && configuration.BarmanCredentials.Azure != nil {
 		env = append(env, fmt.Sprintf("REQUESTS_CA_BUNDLE=%s", BarmanRestoreEndpointCACertificateLocation))
 	}
-	return envSetCloudCredentials(ctx, fileUtils, c, namespace, configuration, env)
+	return envSetCloudCredentials(ctx, c, namespace, configuration, env)
 }
 
 // envSetCloudCredentials sets the AWS environment variables given the configuration
 // inside the cluster
 func envSetCloudCredentials(
 	ctx context.Context,
-	fileUtils FileUtils,
 	c client.Client,
 	namespace string,
 	configuration *barmanTypes.BarmanObjectStoreConfiguration,
@@ -109,7 +106,7 @@ func envSetCloudCredentials(
 	}
 
 	if configuration.BarmanCredentials.Google != nil {
-		return envSetGoogleCredentials(ctx, fileUtils, c, namespace, configuration.BarmanCredentials.Google, env)
+		return envSetGoogleCredentials(ctx, c, namespace, configuration.BarmanCredentials.Google, env)
 	}
 
 	return envSetAzureCredentials(ctx, c, namespace, configuration, env)
@@ -272,7 +269,6 @@ func envSetAzureCredentials(
 
 func envSetGoogleCredentials(
 	ctx context.Context,
-	fileUtils FileUtils,
 	c client.Client,
 	namespace string,
 	googleCredentials *barmanTypes.GoogleCredentials,
@@ -282,7 +278,7 @@ func envSetGoogleCredentials(
 
 	if googleCredentials.GKEEnvironment &&
 		googleCredentials.ApplicationCredentials == nil {
-		return env, reconcileGoogleCredentials(googleCredentials, applicationCredentialsContent, fileUtils)
+		return env, reconcileGoogleCredentials(googleCredentials, applicationCredentialsContent)
 	}
 
 	applicationCredentialsContent, err := extractValueFromSecret(
@@ -295,7 +291,7 @@ func envSetGoogleCredentials(
 		return nil, err
 	}
 
-	if err := reconcileGoogleCredentials(googleCredentials, applicationCredentialsContent, fileUtils); err != nil {
+	if err := reconcileGoogleCredentials(googleCredentials, applicationCredentialsContent); err != nil {
 		return nil, err
 	}
 
@@ -304,25 +300,17 @@ func envSetGoogleCredentials(
 	return env, nil
 }
 
-// FileUtils is a structure allowing the caller to inject
-// a set of functions to manipulate files
-type FileUtils struct {
-	RemoveFile      func(string) error
-	WriteFileAtomic func(fileName string, contents []byte, perm os.FileMode) (bool, error)
-}
-
 func reconcileGoogleCredentials(
 	googleCredentials *barmanTypes.GoogleCredentials,
 	applicationCredentialsContent []byte,
-	fileUtils FileUtils,
 ) error {
 	credentialsPath := "/controller/.application_credentials.json"
 
 	if googleCredentials == nil {
-		return fileUtils.RemoveFile(credentialsPath)
+		return fileutils.RemoveFile(credentialsPath)
 	}
 
-	_, err := fileUtils.WriteFileAtomic(credentialsPath, applicationCredentialsContent, 0o600)
+	_, err := fileutils.WriteFileAtomic(credentialsPath, applicationCredentialsContent, 0o600)
 
 	return err
 }
