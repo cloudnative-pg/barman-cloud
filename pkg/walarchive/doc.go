@@ -14,6 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package utils contains a set of utility functions
-// that are related to supporting Barman cloud
-package utils
+// Package walarchive implement the wal-archive command
+package walarchive

@@ -14,6 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package utils contains a set of utility functions
-// that are related to supporting Barman cloud
-package utils
+// Package spool implements a WAL pooler keeping track of which WALs we have archived
+package spool

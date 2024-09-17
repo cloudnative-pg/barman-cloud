@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package credentials is used to build environment for barman cloud commands
 package credentials
 
 import (

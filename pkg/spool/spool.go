@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package spool implements a WAL pooler keeping track of which WALs we have archived
 package spool
 
 import (
