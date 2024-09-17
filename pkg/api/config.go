@@ -465,15 +465,3 @@ func appendAdditionalCommandArgs(additionalCommandArgs []string, options []strin
 	}
 	return options
 }
-
-type barmanObjectStoreGetter interface {
-	GetBarmanObjectStore() *BarmanObjectStoreConfiguration
-	GetRetentionPolicy() string
-}
-
-// BarmanObjectStoreWebhookGetter is an interface that allows to run the webhook validators
-type BarmanObjectStoreWebhookGetter interface {
-	barmanObjectStoreGetter
-	GetBarmanObjectStorePath() []string
-	GetRetentionPolicyPath() []string
-}
