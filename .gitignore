@@ -28,3 +28,10 @@
 
 # Go workspace file
 go.work
+
+# artifacts
+/bin/
+/testbin/
+
+# Task temporary files
+.task/
