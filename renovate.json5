@@ -34,8 +34,10 @@
       "matchDatasources": [
         "go"
       ],
-      "matchPackagePatterns": [
-        "*"
+      "matchPackageNames": [
+        // Avoid k8s dependencies from being grouped with other dependencies. We want to be careful
+        // with how we update them, since we may get indirect upgrades in cloudnative-pg.
+        "!/k8s.io/"
       ],
       "matchUpdateTypes": [
         "minor",
