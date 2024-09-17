@@ -25,7 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
+	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 )
 
 const (
@@ -62,7 +62,7 @@ func EnvSetBackupCloudCredentials(
 	ctx context.Context,
 	c client.Client,
 	namespace string,
-	configuration *barmanTypes.BarmanObjectStoreConfiguration,
+	configuration *barmanApi.BarmanObjectStoreConfiguration,
 	env []string,
 ) ([]string, error) {
 	if configuration.EndpointCA != nil && configuration.BarmanCredentials.AWS != nil {
@@ -80,7 +80,7 @@ func EnvSetRestoreCloudCredentials(
 	ctx context.Context,
 	c client.Client,
 	namespace string,
-	configuration *barmanTypes.BarmanObjectStoreConfiguration,
+	configuration *barmanApi.BarmanObjectStoreConfiguration,
 	env []string,
 ) ([]string, error) {
 	if configuration.EndpointCA != nil && configuration.BarmanCredentials.AWS != nil {
@@ -97,7 +97,7 @@ func envSetCloudCredentials(
 	ctx context.Context,
 	c client.Client,
 	namespace string,
-	configuration *barmanTypes.BarmanObjectStoreConfiguration,
+	configuration *barmanApi.BarmanObjectStoreConfiguration,
 	env []string,
 ) (envs []string, err error) {
 	if configuration.BarmanCredentials.AWS != nil {
@@ -117,7 +117,7 @@ func envSetAWSCredentials(
 	ctx context.Context,
 	client client.Client,
 	namespace string,
-	s3credentials *barmanTypes.S3Credentials,
+	s3credentials *barmanApi.S3Credentials,
 	env []string,
 ) ([]string, error) {
 	// check if AWS credentials are defined
@@ -196,7 +196,7 @@ func envSetAzureCredentials(
 	ctx context.Context,
 	c client.Client,
 	namespace string,
-	configuration *barmanTypes.BarmanObjectStoreConfiguration,
+	configuration *barmanApi.BarmanObjectStoreConfiguration,
 	env []string,
 ) ([]string, error) {
 	// check if Azure credentials are defined
@@ -270,7 +270,7 @@ func envSetGoogleCredentials(
 	ctx context.Context,
 	c client.Client,
 	namespace string,
-	googleCredentials *barmanTypes.GoogleCredentials,
+	googleCredentials *barmanApi.GoogleCredentials,
 	env []string,
 ) ([]string, error) {
 	var applicationCredentialsContent []byte
@@ -300,7 +300,7 @@ func envSetGoogleCredentials(
 }
 
 func reconcileGoogleCredentials(
-	googleCredentials *barmanTypes.GoogleCredentials,
+	googleCredentials *barmanApi.GoogleCredentials,
 	applicationCredentialsContent []byte,
 ) error {
 	credentialsPath := "/controller/.application_credentials.json"

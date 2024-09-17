@@ -24,8 +24,8 @@ import (
 
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
+	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
-	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
 	barmanUtils "github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
@@ -33,7 +33,7 @@ import (
 // the retention policies, the server name and the environment variables
 func DeleteBackupsByPolicy(
 	ctx context.Context,
-	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
+	barmanConfiguration *barmanApi.BarmanObjectStoreConfiguration,
 	serverName string,
 	env []string,
 	retentionPolicy string,

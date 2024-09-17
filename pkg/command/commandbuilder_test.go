@@ -19,16 +19,16 @@ package command
 import (
 	"strings"
 
-	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
+	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("barmanCloudWalRestoreOptions", func() {
-	var storageConf *barmanTypes.BarmanObjectStoreConfiguration
+	var storageConf *barmanApi.BarmanObjectStoreConfiguration
 	BeforeEach(func() {
-		storageConf = &barmanTypes.BarmanObjectStoreConfiguration{
+		storageConf = &barmanApi.BarmanObjectStoreConfiguration{
 			DestinationPath: "s3://bucket-name/",
 		}
 	})
@@ -45,7 +45,7 @@ var _ = Describe("barmanCloudWalRestoreOptions", func() {
 
 	It("should generate correct arguments", func(ctx SpecContext) {
 		extraOptions := []string{"--read-timeout=60", "-vv"}
-		storageConf.Wal = &barmanTypes.WalBackupConfiguration{
+		storageConf.Wal = &barmanApi.WalBackupConfiguration{
 			RestoreAdditionalCommandArgs: extraOptions,
 		}
 		options, err := CloudWalRestoreOptions(ctx, storageConf, "test-cluster")

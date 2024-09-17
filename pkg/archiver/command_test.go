@@ -19,19 +19,19 @@ package archiver
 import (
 	"strings"
 
-	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
+	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("barmanCloudWalArchiveOptions", func() {
-	var config *barmanTypes.BarmanObjectStoreConfiguration
+	var config *barmanApi.BarmanObjectStoreConfiguration
 
 	BeforeEach(func() {
-		config = &barmanTypes.BarmanObjectStoreConfiguration{
+		config = &barmanApi.BarmanObjectStoreConfiguration{
 			DestinationPath: "s3://bucket-name/",
-			Wal: &barmanTypes.WalBackupConfiguration{
+			Wal: &barmanApi.WalBackupConfiguration{
 				Compression: "gzip",
 				Encryption:  "aes256",
 			},

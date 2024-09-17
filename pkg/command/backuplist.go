@@ -48,15 +48,15 @@ import (
 
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
+	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
 	"github.com/cloudnative-pg/barman-cloud/pkg/catalog"
-	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
 )
 
 func executeQueryCommand(
 	ctx context.Context,
 	barmanCommand string,
-	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
+	barmanConfiguration *barmanApi.BarmanObjectStoreConfiguration,
 	serverName string,
 	additionalOptions []string,
 	env []string,
@@ -100,7 +100,7 @@ func executeQueryCommand(
 // GetBackupList returns the catalog reading it from the object store
 func GetBackupList(
 	ctx context.Context,
-	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
+	barmanConfiguration *barmanApi.BarmanObjectStoreConfiguration,
 	serverName string,
 	env []string,
 ) (*catalog.Catalog, error) {
@@ -133,7 +133,7 @@ func GetBackupByName(
 	ctx context.Context,
 	backupName string,
 	serverName string,
-	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
+	barmanConfiguration *barmanApi.BarmanObjectStoreConfiguration,
 	env []string,
 ) (*catalog.BarmanBackup, error) {
 	contextLogger := log.FromContext(ctx)
@@ -159,7 +159,7 @@ func GetBackupByName(
 func GetLatestBackup(
 	ctx context.Context,
 	serverName string,
-	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
+	barmanConfiguration *barmanApi.BarmanObjectStoreConfiguration,
 	env []string,
 ) (*catalog.BarmanBackup, error) {
 	contextLogger := log.FromContext(ctx)

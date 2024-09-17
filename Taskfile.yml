@@ -10,11 +10,11 @@ tasks:
       - >
         GITHUB_REF= dagger -s call -m github.com/cloudnative-pg/daggerverse/controller-gen@${DAGGER_CONTROLLER_GEN_SHA}
         controller-gen --source . --args object:headerFile=hack/boilerplate.go.txt --args paths=./...
-        file --path pkg/types/zz_generated.deepcopy.go export --path pkg/types/zz_generated.deepcopy.go
+        file --path pkg/api/zz_generated.deepcopy.go export --path pkg/api/zz_generated.deepcopy.go
     sources:
-      - ./pkg/types/**/*.go
+      - ./pkg/api/**/*.go
     generates:
-      - ./pkg/types/zz_generated.deepcopy.go
+      - ./pkg/api/zz_generated.deepcopy.go
 
   spellcheck:
     desc: Run spellcheck

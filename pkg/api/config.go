@@ -18,7 +18,7 @@ limitations under the License.
 // +kubebuilder:object:root=true
 // +k8s:deepcopy-gen=package
 
-package types
+package api
 
 import (
 	"slices"

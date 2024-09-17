@@ -24,9 +24,9 @@ import (
 
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
+	"github.com/cloudnative-pg/barman-cloud/pkg/api"
 	"github.com/cloudnative-pg/barman-cloud/pkg/command"
 	"github.com/cloudnative-pg/barman-cloud/pkg/spool"
-	"github.com/cloudnative-pg/barman-cloud/pkg/types"
 	"github.com/cloudnative-pg/barman-cloud/pkg/walarchive"
 )
 
@@ -135,7 +135,7 @@ func (archiver *WALArchiver) CheckWalArchiveDestination(ctx context.Context, opt
 // command.
 func (archiver *WALArchiver) BarmanCloudCheckWalArchiveOptions(
 	ctx context.Context,
-	configuration *types.BarmanObjectStoreConfiguration,
+	configuration *api.BarmanObjectStoreConfiguration,
 	clusterName string,
 ) ([]string, error) {
 	var options []string

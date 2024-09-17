@@ -27,22 +27,22 @@ import (
 	"github.com/cloudnative-pg/machinery/pkg/execlog"
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
+	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
 	barmanCatalog "github.com/cloudnative-pg/barman-cloud/pkg/catalog"
 	barmanCommand "github.com/cloudnative-pg/barman-cloud/pkg/command"
-	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
 	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 // Command represents a barman backup command
 type Command struct {
-	configuration *barmanTypes.BarmanObjectStoreConfiguration
+	configuration *barmanApi.BarmanObjectStoreConfiguration
 	capabilities  *barmanCapabilities.Capabilities
 }
 
 // NewBackupCommand creates a new barman backup command
 func NewBackupCommand(
-	configuration *barmanTypes.BarmanObjectStoreConfiguration,
+	configuration *barmanApi.BarmanObjectStoreConfiguration,
 	capabilities *barmanCapabilities.Capabilities,
 ) *Command {
 	return &Command{
@@ -59,7 +59,7 @@ func (b *Command) GetDataConfiguration(
 		return options, nil
 	}
 
-	if b.configuration.Data.Compression == barmanTypes.CompressionTypeSnappy && !b.capabilities.HasSnappy {
+	if b.configuration.Data.Compression == barmanApi.CompressionTypeSnappy && !b.capabilities.HasSnappy {
 		return nil, fmt.Errorf("snappy compression is not supported in Barman %v", b.capabilities.Version)
 	}
 

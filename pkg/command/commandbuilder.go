@@ -22,14 +22,14 @@ import (
 
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
+	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
-	barmanTypes "github.com/cloudnative-pg/barman-cloud/pkg/types"
 )
 
 // CloudWalRestoreOptions returns the options needed to execute the barman command successfully
 func CloudWalRestoreOptions(
 	ctx context.Context,
-	configuration *barmanTypes.BarmanObjectStoreConfiguration,
+	configuration *barmanApi.BarmanObjectStoreConfiguration,
 	clusterName string,
 ) ([]string, error) {
 	var options []string
@@ -61,7 +61,7 @@ func CloudWalRestoreOptions(
 func AppendCloudProviderOptionsFromConfiguration(
 	ctx context.Context,
 	options []string,
-	barmanConfiguration *barmanTypes.BarmanObjectStoreConfiguration,
+	barmanConfiguration *barmanApi.BarmanObjectStoreConfiguration,
 ) ([]string, error) {
 	return appendCloudProviderOptions(ctx, options, barmanConfiguration.BarmanCredentials)
 }
@@ -71,7 +71,7 @@ func AppendCloudProviderOptionsFromConfiguration(
 func AppendCloudProviderOptionsFromBackup(
 	ctx context.Context,
 	options []string,
-	credentials barmanTypes.BarmanCredentials,
+	credentials barmanApi.BarmanCredentials,
 ) ([]string, error) {
 	return appendCloudProviderOptions(ctx, options, credentials)
 }
@@ -80,7 +80,7 @@ func AppendCloudProviderOptionsFromBackup(
 func appendCloudProviderOptions(
 	ctx context.Context,
 	options []string,
-	credentials barmanTypes.BarmanCredentials,
+	credentials barmanApi.BarmanCredentials,
 ) ([]string, error) {
 	logger := log.FromContext(ctx)
 
