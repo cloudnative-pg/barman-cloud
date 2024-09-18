@@ -17,6 +17,7 @@ limitations under the License.
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"regexp"
@@ -48,7 +49,7 @@ func MapToBarmanTagsFormat(option string, mapTags map[string]string) ([]string, 
 		return []string{}, nil
 	}
 	if tagsLength >= math.MaxInt-1 {
-		return []string{}, fmt.Errorf("could not list barman tags: %w", ErrMemoryAllocation)
+		return []string{}, errors.New("could not list barman tags: allocation size limit exceeded")
 	}
 
 	tags := make([]string, 0, tagsLength+1)
