@@ -17,90 +17,36 @@ limitations under the License.
 package webhooks
 
 import (
+	"k8s.io/apimachinery/pkg/util/validation/field"
+
 	api "github.com/cloudnative-pg/barman-cloud/pkg/api"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-type resource struct {
-	Spec resourceSpec
-}
-type resourceSpec struct {
-	Backup *backupConfiguration
-}
-type backupConfiguration struct {
-	BarmanObjectStore *api.BarmanObjectStoreConfiguration
-	RetentionPolicy   string
-}
-
-func (r resource) GetBarmanObjectStore() *api.BarmanObjectStoreConfiguration {
-	if r.Spec.Backup == nil {
-		return nil
-	}
-	return r.Spec.Backup.BarmanObjectStore
-}
-
-func (r resource) GetRetentionPolicy() string {
-	if r.Spec.Backup == nil {
-		return ""
-	}
-	return r.Spec.Backup.RetentionPolicy
-}
-
-func (r resource) GetBarmanObjectStorePath() []string {
-	return []string{"spec", "backupConfiguration", "barmanObjectStore"}
-}
-
-func (r resource) GetRetentionPolicyPath() []string {
-	return []string{"spec", "backupConfiguration", "retentionPolicy"}
-}
-
 var _ = Describe("Backup validation", func() {
 	It("complain if there's no credentials", func() {
-		res := &resource{
-			Spec: resourceSpec{
-				Backup: &backupConfiguration{
-					BarmanObjectStore: &api.BarmanObjectStoreConfiguration{},
-				},
-			},
-		}
-		err := ValidateBackupConfiguration(res)
+		err := ValidateBackupConfiguration(
+			&api.BarmanObjectStoreConfiguration{},
+			field.NewPath("spec", "backupConfiguration", "retentionPolicy"))
 		Expect(err).To(HaveLen(1))
 	})
 
 	It("doesn't complain if given policy is not provided", func() {
-		res := &resource{
-			Spec: resourceSpec{
-				Backup: &backupConfiguration{},
-			},
-		}
-		err := ValidateBackupConfiguration(res)
-		Expect(err).To(BeNil())
+		err := ValidateBackupConfiguration(nil, nil)
+		Expect(err).To(BeEmpty())
 	})
+})
 
+var _ = Describe("Retention Policy Validation", func() {
 	It("doesn't complain if given policy is valid", func() {
-		res := &resource{
-			Spec: resourceSpec{
-				Backup: &backupConfiguration{
-					RetentionPolicy: "90d",
-				},
-			},
-		}
-		err := ValidateBackupConfiguration(res)
-		Expect(err).To(BeNil())
+		err := ValidateRetentionPolicy("90d", field.NewPath("spec", "backup", "retentionPolicy"))
+		Expect(err).To(BeEmpty())
 	})
 
 	It("complain if a given policy is not valid", func() {
-		res := &resource{
-			Spec: resourceSpec{
-				Backup: &backupConfiguration{
-					BarmanObjectStore: &api.BarmanObjectStoreConfiguration{},
-					RetentionPolicy:   "09",
-				},
-			},
-		}
-		err := ValidateBackupConfiguration(res)
-		Expect(err).To(HaveLen(2))
+		err := ValidateRetentionPolicy("09", field.NewPath("spec", "backup", "retentionPolicy"))
+		Expect(err).To(HaveLen(1))
 	})
 })

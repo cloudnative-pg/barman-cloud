@@ -23,44 +23,28 @@ import (
 	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
-// barmanObjectStoreGetter is an interface that defines the methods required to retrieve the
-// BarmanObjectStoreConfiguration and RetentionPolicy
-type barmanObjectStoreGetter interface {
-	// GetBarmanObjectStore retrieves the BarmanObjectStoreConfiguration.
-	GetBarmanObjectStore() *api.BarmanObjectStoreConfiguration
-	// GetRetentionPolicy retrieves the retention policy as a string.
-	GetRetentionPolicy() string
-}
-
-// barmanObjectStoreWebhookGetter is an interface that allows to run the webhook validators
-type barmanObjectStoreWebhookGetter interface {
-	barmanObjectStoreGetter
-	GetBarmanObjectStorePath() []string
-	GetRetentionPolicyPath() []string
-}
-
 // ValidateBackupConfiguration validates the backup configuration
-func ValidateBackupConfiguration(obj barmanObjectStoreWebhookGetter) field.ErrorList {
+func ValidateBackupConfiguration(
+	barmanObjectStore *api.BarmanObjectStoreConfiguration,
+	path *field.Path,
+) field.ErrorList {
 	allErrors := field.ErrorList{}
-	barmanObjectStore := obj.GetBarmanObjectStore()
 
 	if barmanObjectStore == nil {
 		return nil
 	}
 
-	basePath := buildFieldPath(obj.GetBarmanObjectStorePath()...)
-
 	credentialsCount := 0
 	if barmanObjectStore.BarmanCredentials.Azure != nil {
 		credentialsCount++
 		allErrors = barmanObjectStore.BarmanCredentials.Azure.ValidateAzureCredentials(
-			basePath.Child("azureCredentials"),
+			path.Child("azureCredentials"),
 		)
 	}
 	if barmanObjectStore.BarmanCredentials.AWS != nil {
 		credentialsCount++
 		allErrors = barmanObjectStore.BarmanCredentials.AWS.ValidateAwsCredentials(
-			basePath.Child("awsCredentials"),
+			path.Child("awsCredentials"),
 		)
 	}
 	if barmanObjectStore.BarmanCredentials.Google != nil {
@@ -70,7 +54,7 @@ func ValidateBackupConfiguration(obj barmanObjectStoreWebhookGetter) field.Error
 	}
 	if credentialsCount == 0 {
 		allErrors = append(allErrors, field.Invalid(
-			basePath,
+			path,
 			barmanObjectStore,
 			"missing credentials. "+
 				"One and only one of azureCredentials, s3Credentials and googleCredentials are required",
@@ -78,34 +62,32 @@ func ValidateBackupConfiguration(obj barmanObjectStoreWebhookGetter) field.Error
 	}
 	if credentialsCount > 1 {
 		allErrors = append(allErrors, field.Invalid(
-			basePath,
+			path,
 			barmanObjectStore,
 			"too many credentials. "+
 				"One and only one of azureCredentials, s3Credentials and googleCredentials are required",
 		))
 	}
 
-	if obj.GetRetentionPolicy() != "" {
-		_, err := utils.ParsePolicy(obj.GetRetentionPolicy())
-		if err != nil {
-			allErrors = append(allErrors, field.Invalid(
-				buildFieldPath(obj.GetRetentionPolicyPath()...),
-				obj.GetRetentionPolicy(),
-				"not a valid retention policy",
-			))
-		}
-	}
-
 	return allErrors
 }
 
-func buildFieldPath(paths ...string) *field.Path {
-	if len(paths) == 0 {
-		return field.NewPath("")
+// ValidateRetentionPolicy validates a Barman retention policy
+func ValidateRetentionPolicy(retentionPolicy string, path *field.Path) field.ErrorList {
+	allErrors := field.ErrorList{}
+
+	if retentionPolicy == "" {
+		return nil
 	}
-	path := field.NewPath(paths[0])
-	for _, s := range paths {
-		path = path.Child(s)
+
+	_, err := utils.ParsePolicy(retentionPolicy)
+	if err != nil {
+		allErrors = append(allErrors, field.Invalid(
+			path,
+			retentionPolicy,
+			"not a valid retention policy",
+		))
 	}
-	return path
+
+	return allErrors
 }
