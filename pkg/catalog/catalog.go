@@ -75,6 +75,24 @@ func (catalog *Catalog) LatestBackupInfo() *BarmanBackup {
 	return nil
 }
 
+// GetLastSuccessfulBackupTime gets the end time of the last successful backup or nil if no backup was successful
+func (catalog *Catalog) GetLastSuccessfulBackupTime() *time.Time {
+	var lastSuccessfulBackup *time.Time
+	if lastSuccessfulBackupInfo := catalog.LatestBackupInfo(); lastSuccessfulBackupInfo != nil {
+		return &lastSuccessfulBackupInfo.EndTime
+	}
+	return lastSuccessfulBackup
+}
+
+// GetBackupIDs returns the list of backup IDs in the catalog
+func (catalog *Catalog) GetBackupIDs() []string {
+	backupIDs := make([]string, len(catalog.List))
+	for idx, barmanBackup := range catalog.List {
+		backupIDs[idx] = barmanBackup.ID
+	}
+	return backupIDs
+}
+
 // FirstRecoverabilityPoint gets the start time of the first backup in
 // the catalog
 func (catalog *Catalog) FirstRecoverabilityPoint() *time.Time {
@@ -95,6 +113,16 @@ func (catalog *Catalog) FirstRecoverabilityPoint() *time.Time {
 	}
 
 	return nil
+}
+
+// GetFirstRecoverabilityPoint see FirstRecoverabilityPoint. This is needed to adhere to the common backup interface.
+func (catalog *Catalog) GetFirstRecoverabilityPoint() *time.Time {
+	return catalog.FirstRecoverabilityPoint()
+}
+
+// GetBackupMethod returns the backup method
+func (catalog Catalog) GetBackupMethod() string {
+	return "barmanObjectStore"
 }
 
 type recoveryTargetAdapter interface {
