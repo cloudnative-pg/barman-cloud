@@ -66,7 +66,7 @@ func New(
 	env []string,
 	spoolDirectory string,
 	pgDataDirectory string,
-	removeEmptyFileArchive func() error,
+	emptyWalArchivePath string,
 ) (archiver *WALArchiver, err error) {
 	contextLog := log.FromContext(ctx)
 	var walArchiveSpool *spool.WALSpool
@@ -81,9 +81,9 @@ func New(
 		env:             env,
 		pgDataDirectory: pgDataDirectory,
 		barmanArchiver: &walarchive.BarmanArchiver{
-			Env:                    env,
-			Touch:                  walArchiveSpool.Touch,
-			RemoveEmptyFileArchive: removeEmptyFileArchive,
+			Env:                 env,
+			Touch:               walArchiveSpool.Touch,
+			EmptyWalArchivePath: emptyWalArchivePath,
 		},
 	}
 	return archiver, nil

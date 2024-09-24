@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/cloudnative-pg/machinery/pkg/execlog"
+	"github.com/cloudnative-pg/machinery/pkg/fileutils"
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
 	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
@@ -33,9 +34,9 @@ import (
 // BarmanArchiver implements a WAL archiver based
 // on Barman cloud
 type BarmanArchiver struct {
-	Env                    []string
-	Touch                  func(walFile string) error
-	RemoveEmptyFileArchive func() error
+	Env                 []string
+	Touch               func(walFile string) error
+	EmptyWalArchivePath string
 }
 
 // WALArchiverResult contains the result of the archival of one WAL
@@ -89,7 +90,10 @@ func (archiver *BarmanArchiver) Archive(
 
 	// Removes the `.check-empty-wal-archive` file inside PGDATA after the
 	// first successful archival of a WAL file.
-	return archiver.RemoveEmptyFileArchive()
+	if err := fileutils.RemoveFile(archiver.EmptyWalArchivePath); err != nil {
+		return fmt.Errorf("error while deleting the check WAL file flag: %w", err)
+	}
+	return nil
 }
 
 // ArchiveList archives a list of WAL files in parallel

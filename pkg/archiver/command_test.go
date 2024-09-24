@@ -17,6 +17,7 @@ limitations under the License.
 package archiver
 
 import (
+	"os"
 	"strings"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
@@ -27,6 +28,8 @@ import (
 
 var _ = Describe("barmanCloudWalArchiveOptions", func() {
 	var config *barmanApi.BarmanObjectStoreConfiguration
+	var tempDir string
+	var tempEmptyWalArchivePath string
 
 	BeforeEach(func() {
 		config = &barmanApi.BarmanObjectStoreConfiguration{
@@ -36,10 +39,20 @@ var _ = Describe("barmanCloudWalArchiveOptions", func() {
 				Encryption:  "aes256",
 			},
 		}
+		var err error
+		tempDir, err = os.MkdirTemp(os.TempDir(), "command_test")
+		Expect(err).ToNot(HaveOccurred())
+		file, err := os.CreateTemp(tempDir, "empty-wal-archive-path")
+		Expect(err).ToNot(HaveOccurred())
+		tempEmptyWalArchivePath = file.Name()
+	})
+	AfterEach(func() {
+		err := os.RemoveAll(tempDir)
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("should generate correct arguments", func(ctx SpecContext) {
-		archiver, err := New(ctx, nil, "spool", "pgdata", nil)
+		archiver, err := New(ctx, nil, "spool", "pgdata", tempEmptyWalArchivePath)
 		Expect(err).ToNot(HaveOccurred())
 
 		extraOptions := []string{"--min-chunk-size=5MB", "--read-timeout=60", "-vv"}
@@ -66,7 +79,7 @@ var _ = Describe("barmanCloudWalArchiveOptions", func() {
 		config.Wal.ArchiveAdditionalCommandArgs = extraOptions
 
 		archiver, err := New(
-			ctx, nil, "spool", "pgdata", nil)
+			ctx, nil, "spool", "pgdata", tempEmptyWalArchivePath)
 		Expect(err).ToNot(HaveOccurred())
 
 		options, err := archiver.BarmanCloudWalArchiveOptions(ctx, config, "test-cluster")
