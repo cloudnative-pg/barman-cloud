@@ -218,5 +218,7 @@ func (b *Command) Take(
 		return err
 	}
 
+	log.Info("Completed barman-cloud-backup", "options", options)
+
 	return nil
 }
