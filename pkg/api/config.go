@@ -239,6 +239,7 @@ type WalBackupConfiguration struct {
 	// It's essential to ensure that the provided arguments are valid and supported
 	// by the 'barman-cloud-wal-archive' command, to avoid potential errors or unintended
 	// behavior during execution.
+	// +optional
 	ArchiveAdditionalCommandArgs []string `json:"archiveAdditionalCommandArgs,omitempty"`
 
 	// Additional arguments that can be appended to the 'barman-cloud-wal-restore'
@@ -254,6 +255,7 @@ type WalBackupConfiguration struct {
 	// It's essential to ensure that the provided arguments are valid and supported
 	// by the 'barman-cloud-wal-restore' command, to avoid potential errors or unintended
 	// behavior during execution.
+	// +optional
 	RestoreAdditionalCommandArgs []string `json:"restoreAdditionalCommandArgs,omitempty"`
 }
 
@@ -303,6 +305,7 @@ type DataBackupConfiguration struct {
 	// It's essential to ensure that the provided arguments are valid and supported
 	// by the 'barman-cloud-backup' command, to avoid potential errors or unintended
 	// behavior during execution.
+	// +optional
 	AdditionalCommandArgs []string `json:"additionalCommandArgs,omitempty"`
 }
 
