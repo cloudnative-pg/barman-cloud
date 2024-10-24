@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/cloudnative-pg/machinery v0.0.0-20240919131343-9dd62b9257c7
+	github.com/cloudnative-pg/machinery v0.0.0-20241014090714-c27747f9974b
 	github.com/onsi/ginkgo/v2 v2.20.2
 	github.com/onsi/gomega v1.34.2
 	k8s.io/api v0.30.3
@@ -54,7 +54,7 @@ require (
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/term v0.24.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
