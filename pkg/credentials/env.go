@@ -105,6 +105,9 @@ func envSetCloudCredentials(
 	}
 
 	if configuration.BarmanCredentials.Google != nil {
+		if configuration.EndpointURL != "" {
+			env = append(env, fmt.Sprintf("STORAGE_EMULATOR_HOST=%s", configuration.EndpointURL))
+		}
 		return envSetGoogleCredentials(ctx, c, namespace, configuration.BarmanCredentials.Google, env)
 	}
 
