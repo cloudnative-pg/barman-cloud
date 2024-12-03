@@ -260,6 +260,12 @@ type BarmanBackup struct {
 	// The moment where the backup ended
 	EndTimeString string `json:"end_time"`
 
+	// The moment where the backup started in ISO format
+	BeginTimeISOString string `json:"begin_time_iso"`
+
+	// The moment where the backup ended in ISO format
+	EndTimeISOString string `json:"end_time_iso"`
+
 	// The moment where the backup ended
 	BeginTime time.Time
 
@@ -314,21 +320,46 @@ func (b *BarmanBackup) deserializeBackupTimeStrings() error {
 	// barmanTimeLayout is the format that is being used to parse
 	// the backupInfo from barman-cloud-backup-list
 	const (
-		barmanTimeLayout = "Mon Jan 2 15:04:05 2006"
+		barmanTimeLayout    = "Mon Jan 2 15:04:05 2006"
+		barmanTimeLayoutISO = "2006-01-02 15:04:05Z07:00"
 	)
 
 	var err error
-	if b.BeginTimeString != "" {
-		b.BeginTime, err = time.Parse(barmanTimeLayout, b.BeginTimeString)
+	if b.BeginTimeISOString != "" {
+		b.BeginTime, err = time.Parse(barmanTimeLayoutISO, b.BeginTimeISOString)
 		if err != nil {
 			return err
 		}
+	} else if b.BeginTimeString != "" {
+		b.BeginTime, err = time.Parse(barmanTimeLayout, b.BeginTimeString)
+		if err != nil {
+			// Barman 3.12.0 incorrectly puts an ISO formatted time in the ctime field.
+			// So in case of parsing failure we try again parsing it as an ISO time,
+			// discarding an eventual failure
+			var internalErr error
+			b.BeginTime, internalErr = time.Parse(barmanTimeLayoutISO, b.BeginTimeString)
+			if internalErr != nil {
+				return err
+			}
+		}
 	}
 
-	if b.EndTimeString != "" {
-		b.EndTime, err = time.Parse(barmanTimeLayout, b.EndTimeString)
+	if b.EndTimeISOString != "" {
+		b.EndTime, err = time.Parse(barmanTimeLayoutISO, b.EndTimeISOString)
 		if err != nil {
 			return err
+		}
+	} else if b.EndTimeString != "" {
+		b.EndTime, err = time.Parse(barmanTimeLayout, b.EndTimeString)
+		if err != nil {
+			// Barman 3.12.0 incorrectly puts an ISO formatted time in the ctime field.
+			// So in case of parsing failure we try again parsing it as an ISO time,
+			// discarding an eventual failure
+			var internalErr error
+			b.EndTime, internalErr = time.Parse(barmanTimeLayoutISO, b.EndTimeString)
+			if internalErr != nil {
+				return err
+			}
 		}
 	}
 
