@@ -331,16 +331,12 @@ func (b *BarmanBackup) deserializeBackupTimeStrings() error {
 			return err
 		}
 	} else if b.BeginTimeString != "" {
-		b.BeginTime, err = time.Parse(barmanTimeLayout, b.BeginTimeString)
+		// Barman 3.12.0 incorrectly puts an ISO formatted time in the ctime field.
+		// So in case of parsing failure we try again parsing it as an ISO time,
+		// discarding an eventual failure
+		b.BeginTime, err = parseTimeWithFallbackLayout(b.BeginTimeString, barmanTimeLayout, barmanTimeLayoutISO)
 		if err != nil {
-			// Barman 3.12.0 incorrectly puts an ISO formatted time in the ctime field.
-			// So in case of parsing failure we try again parsing it as an ISO time,
-			// discarding an eventual failure
-			var internalErr error
-			b.BeginTime, internalErr = time.Parse(barmanTimeLayoutISO, b.BeginTimeString)
-			if internalErr != nil {
-				return err
-			}
+			return err
 		}
 	}
 
@@ -350,20 +346,30 @@ func (b *BarmanBackup) deserializeBackupTimeStrings() error {
 			return err
 		}
 	} else if b.EndTimeString != "" {
-		b.EndTime, err = time.Parse(barmanTimeLayout, b.EndTimeString)
+		// Barman 3.12.0 incorrectly puts an ISO formatted time in the ctime field.
+		// So in case of parsing failure we try again parsing it as an ISO time,
+		// discarding an eventual failure
+		b.EndTime, err = parseTimeWithFallbackLayout(b.EndTimeString, barmanTimeLayout, barmanTimeLayoutISO)
 		if err != nil {
-			// Barman 3.12.0 incorrectly puts an ISO formatted time in the ctime field.
-			// So in case of parsing failure we try again parsing it as an ISO time,
-			// discarding an eventual failure
-			var internalErr error
-			b.EndTime, internalErr = time.Parse(barmanTimeLayoutISO, b.EndTimeString)
-			if internalErr != nil {
-				return err
-			}
+			return err
 		}
 	}
 
 	return nil
+}
+
+func parseTimeWithFallbackLayout(value string, primaryLayout string, fallbackLayout string) (time.Time, error) {
+	result, err := time.Parse(primaryLayout, value)
+	if err == nil {
+		return result, nil
+	}
+
+	result, errFallback := time.Parse(fallbackLayout, value)
+	if errFallback == nil {
+		return result, nil
+	}
+
+	return result, err
 }
 
 func (b *BarmanBackup) isBackupDone() bool {
