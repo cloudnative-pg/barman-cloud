@@ -159,6 +159,190 @@ var _ = Describe("barman-cloud-backup-list parsing", func() {
 		Expect(result.List[0].SystemID).To(Equal("6885668674852188181"))
 		Expect(result.List[0].BeginTimeString).To(Equal("Tue Oct 20 11:52:31 2020"))
 		Expect(result.List[0].EndTimeString).To(Equal("Tue Oct 20 11:52:34 2020"))
+		Expect(result.List[0].BeginTime).To(BeTemporally("==", time.Date(
+			2020, 10, 20,
+			11, 52, 31,
+			0,
+			time.UTC,
+		)))
+		Expect(result.List[0].EndTime).To(BeTemporally("==", time.Date(
+			2020, 10, 20,
+			11, 52, 34,
+			0,
+			time.UTC,
+		)))
+	})
+
+	It("must extract the latest backup id", func() {
+		result, err := NewCatalogFromBarmanCloudBackupList(barmanCloudListOutput)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result.LatestBackupInfo().ID).To(Equal("20201020T115231"))
+	})
+})
+
+var _ = Describe("barman-cloud-backup-list parsing with ISO times", func() {
+	const barmanCloudListOutput = `{
+  "backups_list": [
+    {
+      "backup_label": "'START WAL LOCATION:[...]",
+      "begin_offset": 40,
+      "begin_time": "Tue Oct 20 11:52:31 2020",
+      "begin_time_iso": "2020-10-20 11:52:31+02:00",
+      "begin_wal": "000000010000000000000006",
+      "begin_xlog": "0/6000028",
+      "config_file": "/var/lib/postgresql/data/pgdata/postgresql.conf",
+      "copy_stats": {
+        "total_time": 4.285494,
+        "number_of_workers": 2,
+        "analysis_time": 0,
+        "analysis_time_per_item": {
+          "data": 0
+        },
+        "copy_time_per_item": {
+          "data": 1.368199
+        },
+        "serialized_copy_time_per_item": {
+          "data": 0.433392
+        },
+        "copy_time": 1.368199,
+        "serialized_copy_time": 0.433392
+      },
+      "deduplicated_size": null,
+      "end_offset": 312,
+      "end_time": "Tue Oct 20 11:52:34 2020",
+      "end_time_iso": "2020-10-20 11:52:34+02:00",
+      "end_wal": "000000010000000000000006",
+      "end_xlog": "0/6000138",
+      "error": null,
+      "hba_file": "/var/lib/postgresql/data/pgdata/pg_hba.conf",
+      "ident_file": "/var/lib/postgresql/data/pgdata/pg_ident.conf",
+      "included_files": [
+        "/var/lib/postgresql/data/pgdata/custom.conf"
+      ],
+      "mode": null,
+      "pgdata": "/var/lib/postgresql/data/pgdata",
+      "server_name": "cloud",
+      "size": null,
+      "status": "DONE",
+      "systemid": "6885668674852188181",
+      "tablespaces": null,
+      "timeline": 1,
+      "version": 120004,
+      "xlog_segment_size": 16777216,
+      "backup_id": "20201020T115231"
+    },
+	{
+      "backup_id": "20191020T115231"
+	}
+  ]
+}`
+
+	It("must parse a correct output", func() {
+		result, err := NewCatalogFromBarmanCloudBackupList(barmanCloudListOutput)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result.List).To(HaveLen(2))
+		Expect(result.List[0].ID).To(Equal("20201020T115231"))
+		Expect(result.List[0].SystemID).To(Equal("6885668674852188181"))
+		Expect(result.List[0].BeginTimeString).To(Equal("Tue Oct 20 11:52:31 2020"))
+		Expect(result.List[0].EndTimeString).To(Equal("Tue Oct 20 11:52:34 2020"))
+		Expect(result.List[0].BeginTimeISOString).To(Equal("2020-10-20 11:52:31+02:00"))
+		Expect(result.List[0].EndTimeISOString).To(Equal("2020-10-20 11:52:34+02:00"))
+		Expect(result.List[0].BeginTime).To(BeTemporally("==", time.Date(
+			2020, 10, 20,
+			11, 52, 31,
+			0,
+			time.FixedZone("", 2*60*60),
+		)))
+		Expect(result.List[0].EndTime).To(BeTemporally("==", time.Date(
+			2020, 10, 20,
+			11, 52, 34,
+			0,
+			time.FixedZone("", 2*60*60),
+		)))
+	})
+
+	It("must extract the latest backup id", func() {
+		result, err := NewCatalogFromBarmanCloudBackupList(barmanCloudListOutput)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result.LatestBackupInfo().ID).To(Equal("20201020T115231"))
+	})
+})
+
+var _ = Describe("barman-cloud-backup-list parsing with ISO times in the wrong place", func() {
+	const barmanCloudListOutput = `{
+  "backups_list": [
+    {
+      "backup_label": "'START WAL LOCATION:[...]",
+      "begin_offset": 40,
+      "begin_time": "2020-10-20 11:52:31+02:00",
+      "begin_wal": "000000010000000000000006",
+      "begin_xlog": "0/6000028",
+      "config_file": "/var/lib/postgresql/data/pgdata/postgresql.conf",
+      "copy_stats": {
+        "total_time": 4.285494,
+        "number_of_workers": 2,
+        "analysis_time": 0,
+        "analysis_time_per_item": {
+          "data": 0
+        },
+        "copy_time_per_item": {
+          "data": 1.368199
+        },
+        "serialized_copy_time_per_item": {
+          "data": 0.433392
+        },
+        "copy_time": 1.368199,
+        "serialized_copy_time": 0.433392
+      },
+      "deduplicated_size": null,
+      "end_offset": 312,
+      "end_time": "2020-10-20 11:52:34+02:00",
+      "end_wal": "000000010000000000000006",
+      "end_xlog": "0/6000138",
+      "error": null,
+      "hba_file": "/var/lib/postgresql/data/pgdata/pg_hba.conf",
+      "ident_file": "/var/lib/postgresql/data/pgdata/pg_ident.conf",
+      "included_files": [
+        "/var/lib/postgresql/data/pgdata/custom.conf"
+      ],
+      "mode": null,
+      "pgdata": "/var/lib/postgresql/data/pgdata",
+      "server_name": "cloud",
+      "size": null,
+      "status": "DONE",
+      "systemid": "6885668674852188181",
+      "tablespaces": null,
+      "timeline": 1,
+      "version": 120004,
+      "xlog_segment_size": 16777216,
+      "backup_id": "20201020T115231"
+    },
+	{
+      "backup_id": "20191020T115231"
+	}
+  ]
+}`
+
+	It("must parse a correct output", func() {
+		result, err := NewCatalogFromBarmanCloudBackupList(barmanCloudListOutput)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result.List).To(HaveLen(2))
+		Expect(result.List[0].ID).To(Equal("20201020T115231"))
+		Expect(result.List[0].SystemID).To(Equal("6885668674852188181"))
+		Expect(result.List[0].BeginTimeString).To(Equal("2020-10-20 11:52:31+02:00"))
+		Expect(result.List[0].EndTimeString).To(Equal("2020-10-20 11:52:34+02:00"))
+		Expect(result.List[0].BeginTime).To(BeTemporally("==", time.Date(
+			2020, 10, 20,
+			11, 52, 31,
+			0,
+			time.FixedZone("", 2*60*60),
+		)))
+		Expect(result.List[0].EndTime).To(BeTemporally("==", time.Date(
+			2020, 10, 20,
+			11, 52, 34,
+			0,
+			time.FixedZone("", 2*60*60),
+		)))
 	})
 
 	It("must extract the latest backup id", func() {
@@ -243,5 +427,201 @@ var _ = Describe("barman-cloud-backup-show parsing", func() {
 		Expect(result.SystemID).To(Equal("6885668674852188181"))
 		Expect(result.BeginTimeString).To(Equal("Tue Jan 19 03:14:08 2038"))
 		Expect(result.EndTimeString).To(Equal("Tue Jan 19 04:14:08 2038"))
+		Expect(result.BeginTime).To(BeTemporally("==", time.Date(
+			2038, 1, 19,
+			3, 14, 8,
+			0,
+			time.UTC,
+		)))
+		Expect(result.EndTime).To(BeTemporally("==", time.Date(
+			2038, 1, 19,
+			4, 14, 8,
+			0,
+			time.UTC,
+		)))
+	})
+})
+
+var _ = Describe("barman-cloud-backup-show parsing with ISO times", func() {
+	const barmanCloudShowOutput = `{
+		"cloud":{
+            "backup_label": null,
+            "begin_offset": 40,
+            "begin_time": "Tue Jan 19 03:14:08 2038",
+            "begin_time_iso": "2038-01-19 03:14:08+05:30",
+            "begin_wal": "000000010000000000000002",
+            "begin_xlog": "0/2000028",
+            "compression": null,
+            "config_file": "/pgdata/location/postgresql.conf",
+            "copy_stats": null,
+            "deduplicated_size": null,
+            "end_offset": 184,
+            "end_time": "Tue Jan 19 04:14:08 2038",
+            "end_time_iso": "2038-01-19 04:14:08+05:30",
+            "end_wal": "000000010000000000000004",
+            "end_xlog": "0/20000B8",
+            "error": null,
+            "hba_file": "/pgdata/location/pg_hba.conf",
+            "ident_file": "/pgdata/location/pg_ident.conf",
+            "included_files": null,
+            "mode": "concurrent",
+            "pgdata": "/pgdata/location",
+            "server_name": "main",
+            "size": null,
+            "snapshots_info": {
+                "provider": "gcp",
+                "provider_info": {
+                    "project": "test_project"
+                },
+                "snapshots": [
+                    {
+                        "mount": {
+                            "mount_options": "rw,noatime",
+                            "mount_point": "/opt/disk0"
+                        },
+                        "provider": {
+                            "device_name": "dev0",
+                            "snapshot_name": "snapshot0",
+                            "snapshot_project": "test_project"
+                        }
+                    },
+                    {
+                        "mount": {
+                            "mount_options": "rw",
+                            "mount_point": "/opt/disk1"
+                        },
+                        "provider": {
+                            "device_name": "dev1",
+                            "snapshot_name": "snapshot1",
+                            "snapshot_project": "test_project"
+                        }
+                    }
+                ]
+            },
+            "status": "DONE",
+            "systemid": "6885668674852188181",
+            "tablespaces": [
+                ["tbs1", 16387, "/fake/location"],
+                ["tbs2", 16405, "/another/location"]
+            ],
+            "timeline": 1,
+            "version": 150000,
+            "xlog_segment_size": 16777216,
+            "backup_id": "20201020T115231"
+        }
+}`
+
+	It("must parse a correct output", func() {
+		result, err := NewBackupFromBarmanCloudBackupShow(barmanCloudShowOutput)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).ToNot(BeNil())
+		Expect(result.ID).To(Equal("20201020T115231"))
+		Expect(result.SystemID).To(Equal("6885668674852188181"))
+		Expect(result.BeginTimeString).To(Equal("Tue Jan 19 03:14:08 2038"))
+		Expect(result.EndTimeString).To(Equal("Tue Jan 19 04:14:08 2038"))
+		Expect(result.BeginTimeISOString).To(Equal("2038-01-19 03:14:08+05:30"))
+		Expect(result.EndTimeISOString).To(Equal("2038-01-19 04:14:08+05:30"))
+		Expect(result.BeginTime).To(BeTemporally("==", time.Date(
+			2038, 1, 19,
+			3, 14, 8,
+			0,
+			time.FixedZone("", 5*60*60+30*60),
+		)))
+		Expect(result.EndTime).To(BeTemporally("==", time.Date(
+			2038, 1, 19,
+			4, 14, 8,
+			0,
+			time.FixedZone("", 5*60*60+30*60),
+		)))
+	})
+})
+
+var _ = Describe("barman-cloud-backup-show parsing with ISO times in the wrong place", func() {
+	const barmanCloudShowOutput = `{
+		"cloud":{
+            "backup_label": null,
+            "begin_offset": 40,
+            "begin_time": "2038-01-19 03:14:08+05:30",
+            "begin_wal": "000000010000000000000002",
+            "begin_xlog": "0/2000028",
+            "compression": null,
+            "config_file": "/pgdata/location/postgresql.conf",
+            "copy_stats": null,
+            "deduplicated_size": null,
+            "end_offset": 184,
+            "end_time": "2038-01-19 04:14:08+05:30",
+            "end_wal": "000000010000000000000004",
+            "end_xlog": "0/20000B8",
+            "error": null,
+            "hba_file": "/pgdata/location/pg_hba.conf",
+            "ident_file": "/pgdata/location/pg_ident.conf",
+            "included_files": null,
+            "mode": "concurrent",
+            "pgdata": "/pgdata/location",
+            "server_name": "main",
+            "size": null,
+            "snapshots_info": {
+                "provider": "gcp",
+                "provider_info": {
+                    "project": "test_project"
+                },
+                "snapshots": [
+                    {
+                        "mount": {
+                            "mount_options": "rw,noatime",
+                            "mount_point": "/opt/disk0"
+                        },
+                        "provider": {
+                            "device_name": "dev0",
+                            "snapshot_name": "snapshot0",
+                            "snapshot_project": "test_project"
+                        }
+                    },
+                    {
+                        "mount": {
+                            "mount_options": "rw",
+                            "mount_point": "/opt/disk1"
+                        },
+                        "provider": {
+                            "device_name": "dev1",
+                            "snapshot_name": "snapshot1",
+                            "snapshot_project": "test_project"
+                        }
+                    }
+                ]
+            },
+            "status": "DONE",
+            "systemid": "6885668674852188181",
+            "tablespaces": [
+                ["tbs1", 16387, "/fake/location"],
+                ["tbs2", 16405, "/another/location"]
+            ],
+            "timeline": 1,
+            "version": 150000,
+            "xlog_segment_size": 16777216,
+            "backup_id": "20201020T115231"
+        }
+}`
+
+	It("must parse a correct output", func() {
+		result, err := NewBackupFromBarmanCloudBackupShow(barmanCloudShowOutput)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).ToNot(BeNil())
+		Expect(result.ID).To(Equal("20201020T115231"))
+		Expect(result.SystemID).To(Equal("6885668674852188181"))
+		Expect(result.BeginTimeString).To(Equal("2038-01-19 03:14:08+05:30"))
+		Expect(result.EndTimeString).To(Equal("2038-01-19 04:14:08+05:30"))
+		Expect(result.BeginTime).To(BeTemporally("==", time.Date(
+			2038, 1, 19,
+			3, 14, 8,
+			0,
+			time.FixedZone("", 5*60*60+30*60),
+		)))
+		Expect(result.EndTime).To(BeTemporally("==", time.Date(
+			2038, 1, 19,
+			4, 14, 8,
+			0,
+			time.FixedZone("", 5*60*60+30*60),
+		)))
 	})
 })

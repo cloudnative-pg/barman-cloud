@@ -260,6 +260,12 @@ type BarmanBackup struct {
 	// The moment where the backup ended
 	EndTimeString string `json:"end_time"`
 
+	// The moment where the backup started in ISO format
+	BeginTimeISOString string `json:"begin_time_iso"`
+
+	// The moment where the backup ended in ISO format
+	EndTimeISOString string `json:"end_time_iso"`
+
 	// The moment where the backup ended
 	BeginTime time.Time
 
@@ -310,29 +316,55 @@ func NewBackupFromBarmanCloudBackupShow(rawJSON string) (*BarmanBackup, error) {
 	return &result.Cloud, nil
 }
 
-func (b *BarmanBackup) deserializeBackupTimeStrings() error {
-	// barmanTimeLayout is the format that is being used to parse
-	// the backupInfo from barman-cloud-backup-list
-	const (
-		barmanTimeLayout = "Mon Jan 2 15:04:05 2006"
-	)
+// barmanTimeLayout is the format that is being used to parse
+// the backupInfo from barman-cloud-backup-list
+const (
+	barmanTimeLayout    = "Mon Jan 2 15:04:05 2006"
+	barmanTimeLayoutISO = "2006-01-02 15:04:05Z07:00"
+)
 
+func (b *BarmanBackup) deserializeBackupTimeStrings() error {
 	var err error
-	if b.BeginTimeString != "" {
-		b.BeginTime, err = time.Parse(barmanTimeLayout, b.BeginTimeString)
-		if err != nil {
-			return err
-		}
+	b.BeginTime, err = tryParseISOOrCtimeTime(b.BeginTimeISOString, b.BeginTimeString)
+	if err != nil {
+		return err
 	}
 
-	if b.EndTimeString != "" {
-		b.EndTime, err = time.Parse(barmanTimeLayout, b.EndTimeString)
-		if err != nil {
-			return err
-		}
+	b.EndTime, err = tryParseISOOrCtimeTime(b.EndTimeISOString, b.EndTimeString)
+	if err != nil {
+		return err
 	}
 
 	return nil
+}
+
+func tryParseISOOrCtimeTime(isoValue, ctimeOrISOValue string) (time.Time, error) {
+	if isoValue != "" {
+		return time.Parse(barmanTimeLayoutISO, isoValue)
+	}
+
+	if ctimeOrISOValue != "" {
+		// Barman 3.12.0 incorrectly puts an ISO-formatted time in the ctime-formatted field.
+		// So in case of parsing failure we try again parsing it as an ISO time,
+		// discarding an eventual failure
+		return parseTimeWithFallbackLayout(ctimeOrISOValue, barmanTimeLayout, barmanTimeLayoutISO)
+	}
+
+	return time.Time{}, nil
+}
+
+func parseTimeWithFallbackLayout(value string, primaryLayout string, fallbackLayout string) (time.Time, error) {
+	result, err := time.Parse(primaryLayout, value)
+	if err == nil {
+		return result, nil
+	}
+
+	result, errFallback := time.Parse(fallbackLayout, value)
+	if errFallback == nil {
+		return result, nil
+	}
+
+	return result, err
 }
 
 func (b *BarmanBackup) isBackupDone() bool {
