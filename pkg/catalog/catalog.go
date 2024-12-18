@@ -319,8 +319,7 @@ func NewBackupFromBarmanCloudBackupShow(rawJSON string) (*BarmanBackup, error) {
 // barmanTimeLayout is the format that is being used to parse
 // the backupInfo from barman-cloud-backup-list
 const (
-	barmanTimeLayout    = "Mon Jan 2 15:04:05 2006"
-	barmanTimeLayoutISO = "2006-01-02 15:04:05Z07:00"
+	barmanTimeLayout = "Mon Jan 2 15:04:05 2006"
 )
 
 func (b *BarmanBackup) deserializeBackupTimeStrings() error {
@@ -340,7 +339,7 @@ func (b *BarmanBackup) deserializeBackupTimeStrings() error {
 
 func tryParseISOOrCtimeTime(isoValue, ctimeOrISOValue string) (time.Time, error) {
 	if isoValue != "" {
-		return parseTimeWithFallbackLayout(isoValue, time.RFC3339, barmanTimeLayoutISO)
+		return time.Parse(time.RFC3339, isoValue)
 	}
 
 	if ctimeOrISOValue != "" {
