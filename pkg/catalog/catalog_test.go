@@ -180,14 +180,14 @@ var _ = Describe("barman-cloud-backup-list parsing", func() {
 	})
 })
 
-var _ = Describe("barman-cloud-backup-list parsing with ISO times", func() {
+var _ = Describe("barman-cloud-backup-list parsing with RFC3339 times", func() {
 	const barmanCloudListOutput = `{
   "backups_list": [
     {
       "backup_label": "'START WAL LOCATION:[...]",
       "begin_offset": 40,
       "begin_time": "Tue Oct 20 11:52:31 2020",
-      "begin_time_iso": "2020-10-20 11:52:31+02:00",
+      "begin_time_iso": "2020-10-20T11:52:31+02:00",
       "begin_wal": "000000010000000000000006",
       "begin_xlog": "0/6000028",
       "config_file": "/var/lib/postgresql/data/pgdata/postgresql.conf",
@@ -210,7 +210,7 @@ var _ = Describe("barman-cloud-backup-list parsing with ISO times", func() {
       "deduplicated_size": null,
       "end_offset": 312,
       "end_time": "Tue Oct 20 11:52:34 2020",
-      "end_time_iso": "2020-10-20 11:52:34+02:00",
+      "end_time_iso": "2020-10-20T11:52:34+02:00",
       "end_wal": "000000010000000000000006",
       "end_xlog": "0/6000138",
       "error": null,
@@ -245,8 +245,8 @@ var _ = Describe("barman-cloud-backup-list parsing with ISO times", func() {
 		Expect(result.List[0].SystemID).To(Equal("6885668674852188181"))
 		Expect(result.List[0].BeginTimeString).To(Equal("Tue Oct 20 11:52:31 2020"))
 		Expect(result.List[0].EndTimeString).To(Equal("Tue Oct 20 11:52:34 2020"))
-		Expect(result.List[0].BeginTimeISOString).To(Equal("2020-10-20 11:52:31+02:00"))
-		Expect(result.List[0].EndTimeISOString).To(Equal("2020-10-20 11:52:34+02:00"))
+		Expect(result.List[0].BeginTimeISOString).To(Equal("2020-10-20T11:52:31+02:00"))
+		Expect(result.List[0].EndTimeISOString).To(Equal("2020-10-20T11:52:34+02:00"))
 		Expect(result.List[0].BeginTime).To(BeTemporally("==", time.Date(
 			2020, 10, 20,
 			11, 52, 31,
@@ -268,13 +268,13 @@ var _ = Describe("barman-cloud-backup-list parsing with ISO times", func() {
 	})
 })
 
-var _ = Describe("barman-cloud-backup-list parsing with ISO times in the wrong place", func() {
+var _ = Describe("barman-cloud-backup-list parsing with RFC3339 times in the wrong place", func() {
 	const barmanCloudListOutput = `{
   "backups_list": [
     {
       "backup_label": "'START WAL LOCATION:[...]",
       "begin_offset": 40,
-      "begin_time": "2020-10-20 11:52:31+02:00",
+      "begin_time": "2020-10-20T11:52:31+02:00",
       "begin_wal": "000000010000000000000006",
       "begin_xlog": "0/6000028",
       "config_file": "/var/lib/postgresql/data/pgdata/postgresql.conf",
@@ -296,7 +296,7 @@ var _ = Describe("barman-cloud-backup-list parsing with ISO times in the wrong p
       },
       "deduplicated_size": null,
       "end_offset": 312,
-      "end_time": "2020-10-20 11:52:34+02:00",
+      "end_time": "2020-10-20T11:52:34+02:00",
       "end_wal": "000000010000000000000006",
       "end_xlog": "0/6000138",
       "error": null,
@@ -329,8 +329,8 @@ var _ = Describe("barman-cloud-backup-list parsing with ISO times in the wrong p
 		Expect(result.List).To(HaveLen(2))
 		Expect(result.List[0].ID).To(Equal("20201020T115231"))
 		Expect(result.List[0].SystemID).To(Equal("6885668674852188181"))
-		Expect(result.List[0].BeginTimeString).To(Equal("2020-10-20 11:52:31+02:00"))
-		Expect(result.List[0].EndTimeString).To(Equal("2020-10-20 11:52:34+02:00"))
+		Expect(result.List[0].BeginTimeString).To(Equal("2020-10-20T11:52:31+02:00"))
+		Expect(result.List[0].EndTimeString).To(Equal("2020-10-20T11:52:34+02:00"))
 		Expect(result.List[0].BeginTime).To(BeTemporally("==", time.Date(
 			2020, 10, 20,
 			11, 52, 31,
@@ -442,13 +442,13 @@ var _ = Describe("barman-cloud-backup-show parsing", func() {
 	})
 })
 
-var _ = Describe("barman-cloud-backup-show parsing with ISO times", func() {
+var _ = Describe("barman-cloud-backup-show parsing with RFC3339 times", func() {
 	const barmanCloudShowOutput = `{
 		"cloud":{
             "backup_label": null,
             "begin_offset": 40,
             "begin_time": "Tue Jan 19 03:14:08 2038",
-            "begin_time_iso": "2038-01-19 03:14:08+05:30",
+            "begin_time_iso": "2038-01-19T03:14:08+05:30",
             "begin_wal": "000000010000000000000002",
             "begin_xlog": "0/2000028",
             "compression": null,
@@ -457,7 +457,7 @@ var _ = Describe("barman-cloud-backup-show parsing with ISO times", func() {
             "deduplicated_size": null,
             "end_offset": 184,
             "end_time": "Tue Jan 19 04:14:08 2038",
-            "end_time_iso": "2038-01-19 04:14:08+05:30",
+            "end_time_iso": "2038-01-19T04:14:08+05:30",
             "end_wal": "000000010000000000000004",
             "end_xlog": "0/20000B8",
             "error": null,
@@ -519,8 +519,8 @@ var _ = Describe("barman-cloud-backup-show parsing with ISO times", func() {
 		Expect(result.SystemID).To(Equal("6885668674852188181"))
 		Expect(result.BeginTimeString).To(Equal("Tue Jan 19 03:14:08 2038"))
 		Expect(result.EndTimeString).To(Equal("Tue Jan 19 04:14:08 2038"))
-		Expect(result.BeginTimeISOString).To(Equal("2038-01-19 03:14:08+05:30"))
-		Expect(result.EndTimeISOString).To(Equal("2038-01-19 04:14:08+05:30"))
+		Expect(result.BeginTimeISOString).To(Equal("2038-01-19T03:14:08+05:30"))
+		Expect(result.EndTimeISOString).To(Equal("2038-01-19T04:14:08+05:30"))
 		Expect(result.BeginTime).To(BeTemporally("==", time.Date(
 			2038, 1, 19,
 			3, 14, 8,
@@ -536,12 +536,12 @@ var _ = Describe("barman-cloud-backup-show parsing with ISO times", func() {
 	})
 })
 
-var _ = Describe("barman-cloud-backup-show parsing with ISO times in the wrong place", func() {
+var _ = Describe("barman-cloud-backup-show parsing with RFC3339 times in the wrong place", func() {
 	const barmanCloudShowOutput = `{
 		"cloud":{
             "backup_label": null,
             "begin_offset": 40,
-            "begin_time": "2038-01-19 03:14:08+05:30",
+            "begin_time": "2038-01-19T03:14:08+05:30",
             "begin_wal": "000000010000000000000002",
             "begin_xlog": "0/2000028",
             "compression": null,
@@ -549,7 +549,7 @@ var _ = Describe("barman-cloud-backup-show parsing with ISO times in the wrong p
             "copy_stats": null,
             "deduplicated_size": null,
             "end_offset": 184,
-            "end_time": "2038-01-19 04:14:08+05:30",
+            "end_time": "2038-01-19T04:14:08+05:30",
             "end_wal": "000000010000000000000004",
             "end_xlog": "0/20000B8",
             "error": null,
@@ -609,8 +609,8 @@ var _ = Describe("barman-cloud-backup-show parsing with ISO times in the wrong p
 		Expect(result).ToNot(BeNil())
 		Expect(result.ID).To(Equal("20201020T115231"))
 		Expect(result.SystemID).To(Equal("6885668674852188181"))
-		Expect(result.BeginTimeString).To(Equal("2038-01-19 03:14:08+05:30"))
-		Expect(result.EndTimeString).To(Equal("2038-01-19 04:14:08+05:30"))
+		Expect(result.BeginTimeString).To(Equal("2038-01-19T03:14:08+05:30"))
+		Expect(result.EndTimeString).To(Equal("2038-01-19T04:14:08+05:30"))
 		Expect(result.BeginTime).To(BeTemporally("==", time.Date(
 			2038, 1, 19,
 			3, 14, 8,
