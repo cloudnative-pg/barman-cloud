@@ -340,14 +340,14 @@ func (b *BarmanBackup) deserializeBackupTimeStrings() error {
 
 func tryParseISOOrCtimeTime(isoValue, ctimeOrISOValue string) (time.Time, error) {
 	if isoValue != "" {
-		return time.Parse(barmanTimeLayoutISO, isoValue)
+		return parseTimeWithFallbackLayout(isoValue, time.RFC3339, barmanTimeLayoutISO)
 	}
 
 	if ctimeOrISOValue != "" {
 		// Barman 3.12.0 incorrectly puts an ISO-formatted time in the ctime-formatted field.
 		// So in case of parsing failure we try again parsing it as an ISO time,
 		// discarding an eventual failure
-		return parseTimeWithFallbackLayout(ctimeOrISOValue, barmanTimeLayout, barmanTimeLayoutISO)
+		return parseTimeWithFallbackLayout(ctimeOrISOValue, barmanTimeLayout, time.RFC3339)
 	}
 
 	return time.Time{}, nil
