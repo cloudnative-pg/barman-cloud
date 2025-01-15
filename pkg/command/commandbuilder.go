@@ -110,23 +110,6 @@ func appendCloudProviderOptions(
 			options,
 			"--cloud-provider",
 			"azure-blob-storage")
-
-		if !credentials.Azure.InheritFromAzureAD {
-			break
-		}
-
-		if !capabilities.HasAzureManagedIdentity {
-			err := fmt.Errorf(
-				"barman >= 2.18 is required to use azureInheritFromAzureAD, current: %v",
-				capabilities.Version)
-			logger.Error(err, "Barman version not supported")
-			return nil, err
-		}
-
-		options = append(
-			options,
-			"--credential",
-			"managed-identity")
 	case credentials.Google != nil:
 		if !capabilities.HasGoogle {
 			err := fmt.Errorf(
