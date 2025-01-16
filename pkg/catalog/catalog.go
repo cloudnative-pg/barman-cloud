@@ -183,7 +183,7 @@ func (catalog *Catalog) findClosestBackupFromTargetLSN(
 		if (strconv.Itoa(barmanBackup.TimeLine) == targetTLI ||
 			// if targetTLI is not an integer, it will be ignored actually
 			currentTLIRegex.MatchString(targetTLI)) &&
-			types.LSN(barmanBackup.BeginLSN).Less(targetLSN) {
+			types.LSN(barmanBackup.EndLSN).Less(targetLSN) {
 			return &catalog.List[i], nil
 		}
 	}
