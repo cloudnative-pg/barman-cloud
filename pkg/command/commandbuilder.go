@@ -115,6 +115,10 @@ func appendCloudProviderOptions(
 			break
 		}
 
+		if checkUseDefaultAzureCredentials(ctx) {
+			break
+		}
+
 		if !capabilities.HasAzureManagedIdentity {
 			err := fmt.Errorf(
 				"barman >= 2.18 is required to use azureInheritFromAzureAD, current: %v",
@@ -142,4 +146,20 @@ func appendCloudProviderOptions(
 	}
 
 	return options, nil
+}
+
+type contextKey string
+
+const useDefaultAzureCredentials contextKey = "useDefaultAzureCredentials"
+
+func checkUseDefaultAzureCredentials(ctx context.Context) bool {
+	v := ctx.Value(useDefaultAzureCredentials)
+	if v == nil {
+		return false
+	}
+	result, ok := v.(bool)
+	if !ok {
+		return false
+	}
+	return result
 }
