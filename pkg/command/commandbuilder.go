@@ -115,7 +115,7 @@ func appendCloudProviderOptions(
 			break
 		}
 
-		if checkUseDefaultAzureCredentials(ctx) {
+		if CheckUseDefaultAzureCredentials(ctx) {
 			break
 		}
 
@@ -150,9 +150,12 @@ func appendCloudProviderOptions(
 
 type contextKey string
 
+// useDefaultAzureCredentials context key holding the flag if to use DefaultAzureCredentials
+// for azure-blob-storage
 const useDefaultAzureCredentials contextKey = "useDefaultAzureCredentials"
 
-func checkUseDefaultAzureCredentials(ctx context.Context) bool {
+// CheckUseDefaultAzureCredentials return true if useDefaultAzureCredentials is set
+func CheckUseDefaultAzureCredentials(ctx context.Context) bool {
 	v := ctx.Value(useDefaultAzureCredentials)
 	if v == nil {
 		return false
@@ -162,4 +165,9 @@ func checkUseDefaultAzureCredentials(ctx context.Context) bool {
 		return false
 	}
 	return result
+}
+
+// NewContextWithUseDefaultAzureCredentials create a context with useDefaultAzureCredentials set
+func NewContextWithUseDefaultAzureCredentials(ctx context.Context) context.Context {
+	return context.WithValue(ctx, useDefaultAzureCredentials, true)
 }
