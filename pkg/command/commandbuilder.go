@@ -111,11 +111,11 @@ func appendCloudProviderOptions(
 			"--cloud-provider",
 			"azure-blob-storage")
 
-		if !credentials.Azure.InheritFromAzureAD {
+		if useDefaultAzureCredentials(ctx) {
 			break
 		}
 
-		if CheckUseDefaultAzureCredentials(ctx) {
+		if !credentials.Azure.InheritFromAzureAD {
 			break
 		}
 
@@ -150,12 +150,10 @@ func appendCloudProviderOptions(
 
 type contextKey string
 
-// useDefaultAzureCredentials context key holding the flag if to use DefaultAzureCredentials
-// for azure-blob-storage
-const useDefaultAzureCredentials contextKey = "useDefaultAzureCredentials"
+// contextKeyUseDefaultAzureCredentials contains a bool indicating if the default azure credentials should be used
+const contextKeyUseDefaultAzureCredentials contextKey = "useDefaultAzureCredentials"
 
-// CheckUseDefaultAzureCredentials return true if useDefaultAzureCredentials is set
-func CheckUseDefaultAzureCredentials(ctx context.Context) bool {
+func useDefaultAzureCredentials(ctx context.Context) bool {
 	v := ctx.Value(useDefaultAzureCredentials)
 	if v == nil {
 		return false
@@ -167,7 +165,8 @@ func CheckUseDefaultAzureCredentials(ctx context.Context) bool {
 	return result
 }
 
-// NewContextWithUseDefaultAzureCredentials create a context with useDefaultAzureCredentials set
-func NewContextWithUseDefaultAzureCredentials(ctx context.Context) context.Context {
-	return context.WithValue(ctx, useDefaultAzureCredentials, true)
+// ContextWithDefaultAzureCredentials create a context that contains the contextKeyUseDefaultAzureCredentials flag.
+// When set to true barman-cloud will use the default Azure credentials.
+func ContextWithDefaultAzureCredentials(ctx context.Context, enabled bool) context.Context {
+	return context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, enabled)
 }
