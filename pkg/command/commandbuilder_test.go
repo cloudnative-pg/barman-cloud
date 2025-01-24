@@ -61,21 +61,21 @@ var _ = Describe("barmanCloudWalRestoreOptions", func() {
 
 var _ = Describe("checkUseDefaultAzureCredentials", func() {
 	It("checkUseDefaultAzureCredentials should be false by default", func(ctx SpecContext) {
-		Expect(checkUseDefaultAzureCredentials(ctx)).To(BeFalse())
+		Expect(CheckUseDefaultAzureCredentials(ctx)).To(BeFalse())
 	})
 
 	It("checkUseDefaultAzureCredentials should be false if ctx contains invalid value", func(ctx SpecContext) {
 		newCtx := context.WithValue(ctx, useDefaultAzureCredentials, "invalidValue")
-		Expect(checkUseDefaultAzureCredentials(newCtx)).To(BeFalse())
+		Expect(CheckUseDefaultAzureCredentials(newCtx)).To(BeFalse())
 	})
 
 	It("checkUseDefaultAzureCredentials should be false if ctx contains false value", func(ctx SpecContext) {
 		newCtx := context.WithValue(ctx, useDefaultAzureCredentials, false)
-		Expect(checkUseDefaultAzureCredentials(newCtx)).To(BeFalse())
+		Expect(CheckUseDefaultAzureCredentials(newCtx)).To(BeFalse())
 	})
 
 	It("checkUseDefaultAzureCredentials should be true only if ctx contains true value", func(ctx SpecContext) {
 		newCtx := context.WithValue(ctx, useDefaultAzureCredentials, true)
-		Expect(checkUseDefaultAzureCredentials(newCtx)).To(BeTrue())
+		Expect(CheckUseDefaultAzureCredentials(newCtx)).To(BeTrue())
 	})
 })
