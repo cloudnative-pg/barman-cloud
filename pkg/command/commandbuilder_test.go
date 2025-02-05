@@ -17,6 +17,7 @@ limitations under the License.
 package command
 
 import (
+	"context"
 	"strings"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
@@ -55,5 +56,26 @@ var _ = Describe("barmanCloudWalRestoreOptions", func() {
 				Equal(
 					"s3://bucket-name/ test-cluster --read-timeout=60 -vv",
 				))
+	})
+})
+
+var _ = Describe("useDefaultAzureCredentials", func() {
+	It("should be false by default", func(ctx SpecContext) {
+		Expect(useDefaultAzureCredentials(ctx)).To(BeFalse())
+	})
+
+	It("should be false if ctx contains an invalid value", func(ctx SpecContext) {
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, "invalidValue")
+		Expect(useDefaultAzureCredentials(newCtx)).To(BeFalse())
+	})
+
+	It("should be false if ctx contains false value", func(ctx SpecContext) {
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, false)
+		Expect(useDefaultAzureCredentials(newCtx)).To(BeFalse())
+	})
+
+	It("should be true only if ctx contains true value", func(ctx SpecContext) {
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, true)
+		Expect(useDefaultAzureCredentials(newCtx)).To(BeTrue())
 	})
 })
