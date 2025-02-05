@@ -154,7 +154,7 @@ type contextKey string
 const contextKeyUseDefaultAzureCredentials contextKey = "useDefaultAzureCredentials"
 
 func useDefaultAzureCredentials(ctx context.Context) bool {
-	v := ctx.Value(useDefaultAzureCredentials)
+	v := ctx.Value(contextKeyUseDefaultAzureCredentials)
 	if v == nil {
 		return false
 	}

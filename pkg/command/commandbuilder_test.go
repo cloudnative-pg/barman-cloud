@@ -65,17 +65,17 @@ var _ = Describe("useDefaultAzureCredentials", func() {
 	})
 
 	It("should be false if ctx contains an invalid value", func(ctx SpecContext) {
-		newCtx := context.WithValue(ctx, useDefaultAzureCredentials, "invalidValue")
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, "invalidValue")
 		Expect(useDefaultAzureCredentials(newCtx)).To(BeFalse())
 	})
 
 	It("should be false if ctx contains false value", func(ctx SpecContext) {
-		newCtx := context.WithValue(ctx, useDefaultAzureCredentials, false)
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, false)
 		Expect(useDefaultAzureCredentials(newCtx)).To(BeFalse())
 	})
 
 	It("should be true only if ctx contains true value", func(ctx SpecContext) {
-		newCtx := context.WithValue(ctx, useDefaultAzureCredentials, true)
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, true)
 		Expect(useDefaultAzureCredentials(newCtx)).To(BeTrue())
 	})
 })
