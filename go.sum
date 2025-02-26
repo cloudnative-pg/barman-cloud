@@ -4,8 +4,8 @@ github.com/blang/semver v3.5.1+incompatible h1:cQNTCjp13qL8KC3Nbxr/y2Bqb63oX6wdn
 github.com/blang/semver v3.5.1+incompatible/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnwebNt5EWlYSAyrTnjyyk=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
-github.com/cloudnative-pg/machinery v0.0.0-20250207091712-d15e1d1d4695 h1:iKlyhZi8dvlRUtC4pjdw2vBpsu1W1ffZ08NdvSKl0qU=
-github.com/cloudnative-pg/machinery v0.0.0-20250207091712-d15e1d1d4695/go.mod h1:RMp9FG1kfoG0aU2lzhV3iFyIgBzzD1IgUlIwIey7Jd0=
+github.com/cloudnative-pg/machinery v0.1.0 h1:tjRmsqQmsO/OlaT0uFmkEtVqgr+SGPM88cKZOHYKLBo=
+github.com/cloudnative-pg/machinery v0.1.0/go.mod h1:0V3vm44FaIsY+x4pm8ORry7xCC3AJiO+ebfPNxeP5Ck=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
