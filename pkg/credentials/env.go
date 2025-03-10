@@ -65,13 +65,8 @@ func EnvSetBackupCloudCredentials(
 	configuration *barmanApi.BarmanObjectStoreConfiguration,
 	env []string,
 ) ([]string, error) {
-	if configuration.EndpointCA != nil && configuration.BarmanCredentials.AWS != nil {
-		env = append(env, fmt.Sprintf("AWS_CA_BUNDLE=%s", BarmanBackupEndpointCACertificateLocation))
-	} else if configuration.EndpointCA != nil && configuration.BarmanCredentials.Azure != nil {
-		env = append(env, fmt.Sprintf("REQUESTS_CA_BUNDLE=%s", BarmanBackupEndpointCACertificateLocation))
-	}
-
-	return envSetCloudCredentials(ctx, c, namespace, configuration, env)
+	return EnvSetCloudCredentialsAndCertificates(
+		ctx, c, namespace, configuration, env, BarmanBackupEndpointCACertificateLocation)
 }
 
 // EnvSetRestoreCloudCredentials sets the AWS environment variables needed for restores
@@ -83,10 +78,25 @@ func EnvSetRestoreCloudCredentials(
 	configuration *barmanApi.BarmanObjectStoreConfiguration,
 	env []string,
 ) ([]string, error) {
+	return EnvSetCloudCredentialsAndCertificates(
+		ctx, c, namespace, configuration, env, BarmanRestoreEndpointCACertificateLocation)
+}
+
+// EnvSetCloudCredentialsAndCertificates sets the AWS and Azure
+// environment variables needed for restores given the configuration
+// inside the cluster
+func EnvSetCloudCredentialsAndCertificates(
+	ctx context.Context,
+	c client.Client,
+	namespace string,
+	configuration *barmanApi.BarmanObjectStoreConfiguration,
+	env []string,
+	certificatesLocation string,
+) ([]string, error) {
 	if configuration.EndpointCA != nil && configuration.BarmanCredentials.AWS != nil {
-		env = append(env, fmt.Sprintf("AWS_CA_BUNDLE=%s", BarmanRestoreEndpointCACertificateLocation))
+		env = append(env, fmt.Sprintf("AWS_CA_BUNDLE=%s", certificatesLocation))
 	} else if configuration.EndpointCA != nil && configuration.BarmanCredentials.Azure != nil {
-		env = append(env, fmt.Sprintf("REQUESTS_CA_BUNDLE=%s", BarmanRestoreEndpointCACertificateLocation))
+		env = append(env, fmt.Sprintf("REQUESTS_CA_BUNDLE=%s", certificatesLocation))
 	}
 	return envSetCloudCredentials(ctx, c, namespace, configuration, env)
 }
