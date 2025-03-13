@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.1.0...v0.2.0) (2025-03-13)
+
+
+### Features
+
+* allow using a custom directory for CA certificates ([#78](https://github.com/cloudnative-pg/barman-cloud/issues/78)) ([3fc2d78](https://github.com/cloudnative-pg/barman-cloud/commit/3fc2d78dca9ab469f7460f1faaa975b802baab95))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/onsi/ginkgo/v2 to v2.23.0 ([#76](https://github.com/cloudnative-pg/barman-cloud/issues/76)) ([72ba30c](https://github.com/cloudnative-pg/barman-cloud/commit/72ba30c8e72d8c71aeae594f72ccd5ce6b2b6421))
+
 ## 0.1.0 (2025-02-26)
 
 
