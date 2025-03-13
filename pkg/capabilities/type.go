@@ -33,6 +33,9 @@ type Capabilities struct {
 	HasTags                    bool
 	HasCheckWalArchive         bool
 	HasSnappy                  bool
+	HasZSTD                    bool
+	HasLZ4                     bool
+	HasXZ                      bool
 	HasErrorCodesForWALRestore bool
 	HasErrorCodesForRestore    bool
 	HasAzureManagedIdentity    bool
