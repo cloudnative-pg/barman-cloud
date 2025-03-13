@@ -42,6 +42,12 @@ func detect(version *semver.Version) *Capabilities {
 	newCapabilities.Version = version
 
 	switch {
+	case version.GE(semver.Version{Major: 3, Minor: 12}):
+		// lz4, xz, and zstd compression support, added in barman 3.12
+		newCapabilities.HasLZ4 = true
+		newCapabilities.HasXZ = true
+		newCapabilities.HasZSTD = true
+		fallthrough
 	case version.GE(semver.Version{Major: 3, Minor: 4}):
 		// The --name flag was added to Barman in version 3.3 but we also require the
 		// barman-cloud-backup-show command which was not added until Barman version 3.4

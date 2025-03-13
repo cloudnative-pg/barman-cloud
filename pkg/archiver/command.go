@@ -124,9 +124,20 @@ func (archiver *WALArchiver) BarmanCloudWalArchiveOptions(
 	}
 
 	var options []string
+	compressionSupported := map[barmanApi.CompressionType]bool{
+		barmanApi.CompressionTypeNone:   true,
+		barmanApi.CompressionTypeBzip2:  true,
+		barmanApi.CompressionTypeGzip:   true,
+		barmanApi.CompressionTypeSnappy: capabilities.HasSnappy,
+		barmanApi.CompressionTypeXZ:     capabilities.HasXZ,
+		barmanApi.CompressionTypeLZ4:    capabilities.HasLZ4,
+		barmanApi.CompressionTypeZSTD:   capabilities.HasZSTD,
+	}
+
 	if configuration.Wal != nil {
-		if configuration.Wal.Compression == barmanApi.CompressionTypeSnappy && !capabilities.HasSnappy {
-			return nil, fmt.Errorf("snappy compression is not supported in Barman %v", capabilities.Version)
+		if !compressionSupported[configuration.Wal.Compression] {
+			return nil, fmt.Errorf("%v compression is not supported in Barman %v",
+				configuration.Wal.Compression, capabilities.Version)
 		}
 		if len(configuration.Wal.Compression) != 0 {
 			options = append(

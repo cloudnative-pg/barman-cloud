@@ -57,6 +57,15 @@ const (
 
 	// CompressionTypeSnappy means snappy compression is performed
 	CompressionTypeSnappy = CompressionType("snappy")
+
+	// CompressionTypeXZ means xz compression is performed
+	CompressionTypeXZ = CompressionType("xz")
+
+	// CompressionTypeLZ4 means lz4 compression is performed
+	CompressionTypeLZ4 = CompressionType("lz4")
+
+	// CompressionTypeZSTD means zstd compression is performed
+	CompressionTypeZSTD = CompressionType("zstd")
 )
 
 // BarmanCredentials an object containing the potential credentials for each cloud provider
@@ -205,7 +214,7 @@ type BarmanObjectStoreConfiguration struct {
 type WalBackupConfiguration struct {
 	// Compress a WAL file before sending it to the object store. Available
 	// options are empty string (no compression, default), `gzip`, `bzip2` or `snappy`.
-	// +kubebuilder:validation:Enum=gzip;bzip2;snappy
+	// +kubebuilder:validation:Enum=gzip;bzip2;snappy;xz;lz4;zstd
 	// +optional
 	Compression CompressionType `json:"compression,omitempty"`
 
@@ -265,7 +274,7 @@ type DataBackupConfiguration struct {
 	// Compress a backup file (a tar file per tablespace) while streaming it
 	// to the object store. Available options are empty string (no
 	// compression, default), `gzip`, `bzip2` or `snappy`.
-	// +kubebuilder:validation:Enum=gzip;bzip2;snappy
+	// +kubebuilder:validation:Enum=gzip;bzip2;snappy;xz;lz4;zstd
 	// +optional
 	Compression CompressionType `json:"compression,omitempty"`
 
