@@ -59,10 +59,6 @@ func (b *Command) GetDataConfiguration(
 		return options, nil
 	}
 
-	if b.configuration.Data.Compression == barmanApi.CompressionTypeSnappy && !b.capabilities.HasSnappy {
-		return nil, fmt.Errorf("snappy compression is not supported in Barman %v", b.capabilities.Version)
-	}
-
 	if len(b.configuration.Data.Compression) != 0 {
 		options = append(
 			options,
