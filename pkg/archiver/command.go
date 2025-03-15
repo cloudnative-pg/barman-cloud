@@ -29,7 +29,6 @@ import (
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
-	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
 	barmanCommand "github.com/cloudnative-pg/barman-cloud/pkg/command"
 	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
@@ -118,16 +117,8 @@ func (archiver *WALArchiver) BarmanCloudWalArchiveOptions(
 	configuration *barmanApi.BarmanObjectStoreConfiguration,
 	clusterName string,
 ) ([]string, error) {
-	capabilities, err := barmanCapabilities.CurrentCapabilities()
-	if err != nil {
-		return nil, err
-	}
-
 	var options []string
 	if configuration.Wal != nil {
-		if configuration.Wal.Compression == barmanApi.CompressionTypeSnappy && !capabilities.HasSnappy {
-			return nil, fmt.Errorf("snappy compression is not supported in Barman %v", capabilities.Version)
-		}
 		if len(configuration.Wal.Compression) != 0 {
 			options = append(
 				options,
@@ -164,7 +155,7 @@ func (archiver *WALArchiver) BarmanCloudWalArchiveOptions(
 		options = append(options, historyTags...)
 	}
 
-	options, err = barmanCommand.AppendCloudProviderOptionsFromConfiguration(ctx, options, configuration)
+	options, err := barmanCommand.AppendCloudProviderOptionsFromConfiguration(ctx, options, configuration)
 	if err != nil {
 		return nil, err
 	}
