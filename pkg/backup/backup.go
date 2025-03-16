@@ -59,16 +59,7 @@ func (b *Command) GetDataConfiguration(
 		return options, nil
 	}
 
-	compressionSupported := map[barmanApi.CompressionType]bool{
-		barmanApi.CompressionTypeNone:   true,
-		barmanApi.CompressionTypeBzip2:  true,
-		barmanApi.CompressionTypeGzip:   true,
-		barmanApi.CompressionTypeSnappy: b.capabilities.HasSnappy,
-		barmanApi.CompressionTypeXZ:     b.capabilities.HasXZ,
-		barmanApi.CompressionTypeLZ4:    b.capabilities.HasLZ4,
-		barmanApi.CompressionTypeZSTD:   b.capabilities.HasZSTD,
-	}
-	if !compressionSupported[b.configuration.Data.Compression] {
+	if !b.capabilities.HasCompression(b.configuration.Data.Compression) {
 		return nil, fmt.Errorf("%v compression is not supported in Barman %v",
 			b.configuration.Data.Compression, b.capabilities.Version)
 	}

@@ -19,6 +19,8 @@ package capabilities
 
 import (
 	"github.com/blang/semver"
+
+	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 )
 
 // Capabilities collects a set of boolean values that shows the possible capabilities of Barman and the version
@@ -32,13 +34,10 @@ type Capabilities struct {
 	HasRetentionPolicy         bool
 	HasTags                    bool
 	HasCheckWalArchive         bool
-	HasSnappy                  bool
-	HasZSTD                    bool
-	HasLZ4                     bool
-	HasXZ                      bool
 	HasErrorCodesForWALRestore bool
 	HasErrorCodesForRestore    bool
 	HasAzureManagedIdentity    bool
+	supportedCompressions      []barmanApi.CompressionType
 }
 
 // LegacyExecutor allows this code to know
@@ -54,4 +53,19 @@ func (c *Capabilities) ShouldExecuteBackupWithName(exec LegacyExecutor) bool {
 	}
 
 	return c.hasName
+}
+
+// HasCompression returns true if the given compression is supported by Barman
+func (c *Capabilities) HasCompression(compression barmanApi.CompressionType) bool {
+	if c == nil {
+		return false
+	}
+
+	for _, item := range c.supportedCompressions {
+		if item == compression {
+			return true
+		}
+	}
+
+	return false
 }
