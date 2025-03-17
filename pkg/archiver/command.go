@@ -125,8 +125,9 @@ func (archiver *WALArchiver) BarmanCloudWalArchiveOptions(
 
 	var options []string
 	if configuration.Wal != nil {
-		if configuration.Wal.Compression == barmanApi.CompressionTypeSnappy && !capabilities.HasSnappy {
-			return nil, fmt.Errorf("snappy compression is not supported in Barman %v", capabilities.Version)
+		if !capabilities.HasCompression(configuration.Wal.Compression) {
+			return nil, fmt.Errorf("%v compression is not supported in Barman %v",
+				configuration.Wal.Compression, capabilities.Version)
 		}
 		if len(configuration.Wal.Compression) != 0 {
 			options = append(

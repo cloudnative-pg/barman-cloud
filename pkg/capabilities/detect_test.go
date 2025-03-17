@@ -19,12 +19,42 @@ package capabilities
 import (
 	"github.com/blang/semver"
 
+	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("detect capabilities", func() {
-	It("ensures that all capabilities are true for the 3.4 version", func() {
+	It("ensures that all capabilities are true for the 3.12 version", func() {
+		version, err := semver.ParseTolerant("3.12.0")
+		Expect(err).ToNot(HaveOccurred())
+		capabilities := detect(&version)
+		Expect(capabilities).To(Equal(&Capabilities{
+			Version:                    &version,
+			hasName:                    true,
+			HasAzure:                   true,
+			HasS3:                      true,
+			HasGoogle:                  true,
+			HasRetentionPolicy:         true,
+			HasTags:                    true,
+			HasCheckWalArchive:         true,
+			HasErrorCodesForWALRestore: true,
+			HasErrorCodesForRestore:    true,
+			HasAzureManagedIdentity:    true,
+			supportedCompressions: []barmanApi.CompressionType{
+				barmanApi.CompressionTypeNone,
+				barmanApi.CompressionTypeBzip2,
+				barmanApi.CompressionTypeGzip,
+				barmanApi.CompressionTypeLz4,
+				barmanApi.CompressionTypeXz,
+				barmanApi.CompressionTypeZstd,
+				barmanApi.CompressionTypeSnappy,
+			},
+		}))
+	})
+
+	It("ensures that barman versions 3.4 have no additional compression capabilities", func() {
 		version, err := semver.ParseTolerant("3.4.0")
 		Expect(err).ToNot(HaveOccurred())
 		capabilities := detect(&version)
@@ -37,10 +67,15 @@ var _ = Describe("detect capabilities", func() {
 			HasRetentionPolicy:         true,
 			HasTags:                    true,
 			HasCheckWalArchive:         true,
-			HasSnappy:                  true,
 			HasErrorCodesForWALRestore: true,
 			HasErrorCodesForRestore:    true,
 			HasAzureManagedIdentity:    true,
+			supportedCompressions: []barmanApi.CompressionType{
+				barmanApi.CompressionTypeNone,
+				barmanApi.CompressionTypeBzip2,
+				barmanApi.CompressionTypeGzip,
+				barmanApi.CompressionTypeSnappy,
+			},
 		}))
 	})
 
@@ -56,10 +91,15 @@ var _ = Describe("detect capabilities", func() {
 			HasRetentionPolicy:         true,
 			HasTags:                    true,
 			HasCheckWalArchive:         true,
-			HasSnappy:                  true,
 			HasErrorCodesForWALRestore: true,
 			HasErrorCodesForRestore:    true,
 			HasAzureManagedIdentity:    true,
+			supportedCompressions: []barmanApi.CompressionType{
+				barmanApi.CompressionTypeNone,
+				barmanApi.CompressionTypeBzip2,
+				barmanApi.CompressionTypeGzip,
+				barmanApi.CompressionTypeSnappy,
+			},
 		}))
 	})
 
@@ -74,14 +114,19 @@ var _ = Describe("detect capabilities", func() {
 			HasRetentionPolicy:         true,
 			HasTags:                    true,
 			HasCheckWalArchive:         true,
-			HasSnappy:                  true,
 			HasErrorCodesForWALRestore: true,
 			HasErrorCodesForRestore:    true,
 			HasAzureManagedIdentity:    true,
+			supportedCompressions: []barmanApi.CompressionType{
+				barmanApi.CompressionTypeNone,
+				barmanApi.CompressionTypeBzip2,
+				barmanApi.CompressionTypeGzip,
+				barmanApi.CompressionTypeSnappy,
+			},
 		}))
 	})
 
-	It("ensures that barmans versions below 2.18.0 only return the expected capabilities", func() {
+	It("ensures that barman versions below 2.18.0 only return the expected capabilities", func() {
 		version, err := semver.ParseTolerant("2.17.0")
 		Expect(err).ToNot(HaveOccurred())
 		capabilities := detect(&version)
@@ -90,6 +135,11 @@ var _ = Describe("detect capabilities", func() {
 			HasAzure:           true,
 			HasS3:              true,
 			HasRetentionPolicy: true,
+			supportedCompressions: []barmanApi.CompressionType{
+				barmanApi.CompressionTypeNone,
+				barmanApi.CompressionTypeBzip2,
+				barmanApi.CompressionTypeGzip,
+			},
 		}), "unexpected capabilities set to true")
 	})
 
@@ -101,6 +151,11 @@ var _ = Describe("detect capabilities", func() {
 			Version:  &version,
 			HasAzure: true,
 			HasS3:    true,
+			supportedCompressions: []barmanApi.CompressionType{
+				barmanApi.CompressionTypeNone,
+				barmanApi.CompressionTypeBzip2,
+				barmanApi.CompressionTypeGzip,
+			},
 		}))
 	})
 
@@ -110,6 +165,11 @@ var _ = Describe("detect capabilities", func() {
 		capabilities := detect(&version)
 		Expect(capabilities).To(Equal(&Capabilities{
 			Version: &version,
+			supportedCompressions: []barmanApi.CompressionType{
+				barmanApi.CompressionTypeNone,
+				barmanApi.CompressionTypeBzip2,
+				barmanApi.CompressionTypeGzip,
+			},
 		}))
 	})
 })

@@ -24,6 +24,8 @@ import (
 
 	"github.com/blang/semver"
 	"github.com/cloudnative-pg/machinery/pkg/log"
+
+	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 )
 
 // capabilities stores the current Barman capabilities
@@ -34,6 +36,12 @@ var capabilities *Capabilities
 func detect(version *semver.Version) *Capabilities {
 	contextLogger := log.FromContext(context.Background())
 	newCapabilities := new(Capabilities)
+	newCapabilities.supportedCompressions = []barmanApi.CompressionType{
+		barmanApi.CompressionTypeNone,
+		barmanApi.CompressionTypeBzip2,
+		barmanApi.CompressionTypeGzip,
+	}
+
 	if version == nil {
 		contextLogger.Info("Missing Barman Cloud installation in the operand image")
 		return newCapabilities
@@ -42,6 +50,15 @@ func detect(version *semver.Version) *Capabilities {
 	newCapabilities.Version = version
 
 	switch {
+	case version.GE(semver.Version{Major: 3, Minor: 12}):
+		// lz4, xz, and zstd compression support, added in barman 3.12
+		newCapabilities.supportedCompressions = append(
+			newCapabilities.supportedCompressions,
+			barmanApi.CompressionTypeLz4,
+			barmanApi.CompressionTypeXz,
+			barmanApi.CompressionTypeZstd,
+		)
+		fallthrough
 	case version.GE(semver.Version{Major: 3, Minor: 4}):
 		// The --name flag was added to Barman in version 3.3 but we also require the
 		// barman-cloud-backup-show command which was not added until Barman version 3.4
@@ -57,7 +74,10 @@ func detect(version *semver.Version) *Capabilities {
 		// Barman-cloud-check-wal-archive, added in Barman >= 2.18
 		newCapabilities.HasCheckWalArchive = true
 		// Snappy compression support, added in Barman >= 2.18
-		newCapabilities.HasSnappy = true
+		newCapabilities.supportedCompressions = append(
+			newCapabilities.supportedCompressions,
+			barmanApi.CompressionTypeSnappy,
+		)
 		// error codes for wal-restore command added in Barman >= 2.18
 		newCapabilities.HasErrorCodesForWALRestore = true
 		// azure-identity credential of type managed-identity added in Barman >= 2.18
