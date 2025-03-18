@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.2.0...v0.3.0) (2025-03-18)
+
+
+### Features
+
+* add lz4, xz, and zstd compression ([#82](https://github.com/cloudnative-pg/barman-cloud/issues/82)) ([6848fd4](https://github.com/cloudnative-pg/barman-cloud/commit/6848fd45696b2eb66ea2b40b4c3a006e64028bcc))
+
 ## [0.2.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.1.0...v0.2.0) (2025-03-13)
 
 
