@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.0...v0.3.1) (2025-03-20)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/onsi/ginkgo/v2 to v2.23.1 ([#91](https://github.com/cloudnative-pg/barman-cloud/issues/91)) ([42588ca](https://github.com/cloudnative-pg/barman-cloud/commit/42588ca339ce6ce178f4ec1a1a301acb933785e2))
+* remove lz4, xz, and zstd compression for backups ([#89](https://github.com/cloudnative-pg/barman-cloud/issues/89)) ([d53d05b](https://github.com/cloudnative-pg/barman-cloud/commit/d53d05b8f023dab6be20bd9bbb0b592470ef8662)), closes [#88](https://github.com/cloudnative-pg/barman-cloud/issues/88)
+
 ## [0.3.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.2.0...v0.3.0) (2025-03-18)
 
 
