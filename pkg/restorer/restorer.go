@@ -28,8 +28,8 @@ import (
 	"github.com/cloudnative-pg/machinery/pkg/execlog"
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
-	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
 	"github.com/cloudnative-pg/barman-cloud/pkg/spool"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 const (
@@ -226,11 +226,6 @@ func (restorer *WALRestorer) Restore(
 		exitCodeGeneric             = 4
 	)
 
-	currentCapabilities, capabilitiesError := barmanCapabilities.CurrentCapabilities()
-	if capabilitiesError != nil {
-		return capabilitiesError
-	}
-
 	optionsLength := len(baseOptions)
 	if optionsLength >= math.MaxInt-2 {
 		return fmt.Errorf("can't restore wal file %v, options too long", walName)
@@ -240,19 +235,19 @@ func (restorer *WALRestorer) Restore(
 	options = append(options, walName, destinationPath)
 
 	barmanCloudWalRestoreCmd := exec.Command(
-		barmanCapabilities.BarmanCloudWalRestore,
+		utils.BarmanCloudWalRestore,
 		options...) // #nosec G204
 	barmanCloudWalRestoreCmd.Env = restorer.env
 
-	err := execlog.RunStreaming(barmanCloudWalRestoreCmd, barmanCapabilities.BarmanCloudWalRestore)
+	err := execlog.RunStreaming(barmanCloudWalRestoreCmd, utils.BarmanCloudWalRestore)
 	if err == nil {
 		return nil
 	}
 
 	var exitError *exec.ExitError
-	if !currentCapabilities.HasErrorCodesForWALRestore || !errors.As(err, &exitError) {
+	if !errors.As(err, &exitError) {
 		return fmt.Errorf("unexpected failure retrieving %q with %s: %w",
-			walName, barmanCapabilities.BarmanCloudWalRestore, err)
+			walName, utils.BarmanCloudWalRestore, err)
 	}
 
 	// nolint: lll
@@ -263,15 +258,15 @@ func (restorer *WALRestorer) Restore(
 		return fmt.Errorf("object storage or file not found %s: %w", walName, ErrWALNotFound)
 	case exitCodeConnectivityError:
 		return fmt.Errorf("connectivity failure while executing %s, retrying",
-			barmanCapabilities.BarmanCloudWalRestore)
+			utils.BarmanCloudWalRestore)
 	case exitCodeInvalidWalName:
 		return fmt.Errorf("invalid name for a WAL file: %s", walName)
 	case exitCodeGeneric:
 		return fmt.Errorf("generic error code encountered while executing %s",
-			barmanCapabilities.BarmanCloudWalRestore)
+			utils.BarmanCloudWalRestore)
 	default:
 		return fmt.Errorf("encountered an unrecognized exit code error: '%d' while executing %s",
 			exitCode,
-			barmanCapabilities.BarmanCloudWalRestore)
+			utils.BarmanCloudWalRestore)
 	}
 }

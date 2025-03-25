@@ -28,7 +28,7 @@ import (
 	"github.com/cloudnative-pg/machinery/pkg/fileutils"
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
-	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 // BarmanArchiver implements a WAL archiver based
@@ -70,22 +70,22 @@ func (archiver *BarmanArchiver) Archive(
 	copy(options, baseOptions)
 	options = append(options, walName)
 
-	contextLogger.Info("Executing "+barmanCapabilities.BarmanCloudWalArchive,
+	contextLogger.Info("Executing "+utils.BarmanCloudWalArchive,
 		"walName", walName,
 		"options", options,
 	)
 
-	barmanCloudWalArchiveCmd := exec.Command(barmanCapabilities.BarmanCloudWalArchive, options...) // #nosec G204
+	barmanCloudWalArchiveCmd := exec.Command(utils.BarmanCloudWalArchive, options...) // #nosec G204
 	barmanCloudWalArchiveCmd.Env = archiver.Env
 
-	err := execlog.RunStreaming(barmanCloudWalArchiveCmd, barmanCapabilities.BarmanCloudWalArchive)
+	err := execlog.RunStreaming(barmanCloudWalArchiveCmd, utils.BarmanCloudWalArchive)
 	if err != nil {
-		contextLogger.Error(err, "Error invoking "+barmanCapabilities.BarmanCloudWalArchive,
+		contextLogger.Error(err, "Error invoking "+utils.BarmanCloudWalArchive,
 			"walName", walName,
 			"options", options,
 			"exitCode", barmanCloudWalArchiveCmd.ProcessState.ExitCode(),
 		)
-		return fmt.Errorf("unexpected failure invoking %s: %w", barmanCapabilities.BarmanCloudWalArchive, err)
+		return fmt.Errorf("unexpected failure invoking %s: %w", utils.BarmanCloudWalArchive, err)
 	}
 
 	// Removes the `.check-empty-wal-archive` file inside PGDATA after the
@@ -154,32 +154,20 @@ func (archiver *BarmanArchiver) CheckWalArchiveDestination(ctx context.Context, 
 	contextLogger := log.FromContext(ctx)
 	contextLogger.Info("barman-cloud-check-wal-archive checking the first wal")
 
-	// Check barman compatibility
-	capabilities, err := barmanCapabilities.CurrentCapabilities()
-	if err != nil {
-		return err
-	}
-
-	if !capabilities.HasCheckWalArchive {
-		contextLogger.Warning("barman-cloud-check-wal-archive cannot be used, is recommended to upgrade" +
-			" to version 2.18 or above.")
-		return nil
-	}
-
-	contextLogger.Trace("Executing "+barmanCapabilities.BarmanCloudCheckWalArchive,
+	contextLogger.Trace("Executing "+utils.BarmanCloudCheckWalArchive,
 		"options", options,
 	)
 
-	barmanCloudWalArchiveCmd := exec.Command(barmanCapabilities.BarmanCloudCheckWalArchive, options...) // #nosec G204
+	barmanCloudWalArchiveCmd := exec.Command(utils.BarmanCloudCheckWalArchive, options...) // #nosec G204
 	barmanCloudWalArchiveCmd.Env = archiver.Env
 
-	err = execlog.RunStreaming(barmanCloudWalArchiveCmd, barmanCapabilities.BarmanCloudCheckWalArchive)
+	err := execlog.RunStreaming(barmanCloudWalArchiveCmd, utils.BarmanCloudCheckWalArchive)
 	if err != nil {
-		contextLogger.Error(err, "Error invoking "+barmanCapabilities.BarmanCloudCheckWalArchive,
+		contextLogger.Error(err, "Error invoking "+utils.BarmanCloudCheckWalArchive,
 			"options", options,
 			"exitCode", barmanCloudWalArchiveCmd.ProcessState.ExitCode(),
 		)
-		return fmt.Errorf("unexpected failure invoking %s: %w", barmanCapabilities.BarmanCloudWalArchive, err)
+		return fmt.Errorf("unexpected failure invoking %s: %w", utils.BarmanCloudWalArchive, err)
 	}
 
 	contextLogger.Trace("barman-cloud-check-wal-archive command execution completed")

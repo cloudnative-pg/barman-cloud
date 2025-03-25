@@ -19,13 +19,11 @@ package command
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"os/exec"
 
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
-	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
 	barmanUtils "github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
@@ -40,25 +38,12 @@ func DeleteBackupsByPolicy(
 ) error {
 	contextLogger := log.FromContext(ctx).WithName("barman")
 
-	capabilities, err := barmanCapabilities.CurrentCapabilities()
-	if err != nil {
-		return err
-	}
-
-	if !capabilities.HasRetentionPolicy {
-		err := fmt.Errorf(
-			"barman >= 2.14 is required to use retention policy, current: %v",
-			capabilities.Version)
-		contextLogger.Error(err, "Failed applying backup retention policies")
-		return err
-	}
-
 	var options []string
 	if barmanConfiguration.EndpointURL != "" {
 		options = append(options, "--endpoint-url", barmanConfiguration.EndpointURL)
 	}
 
-	options, err = AppendCloudProviderOptionsFromConfiguration(ctx, options, barmanConfiguration)
+	options, err := AppendCloudProviderOptionsFromConfiguration(ctx, options, barmanConfiguration)
 	if err != nil {
 		return err
 	}
@@ -77,14 +62,14 @@ func DeleteBackupsByPolicy(
 
 	var stdoutBuffer bytes.Buffer
 	var stderrBuffer bytes.Buffer
-	cmd := exec.Command(barmanCapabilities.BarmanCloudBackupDelete, options...) // #nosec G204
+	cmd := exec.Command(barmanUtils.BarmanCloudBackupDelete, options...) // #nosec G204
 	cmd.Env = env
 	cmd.Stdout = &stdoutBuffer
 	cmd.Stderr = &stderrBuffer
 	err = cmd.Run()
 	if err != nil {
 		contextLogger.Error(err,
-			"Error invoking "+barmanCapabilities.BarmanCloudBackupDelete,
+			"Error invoking "+barmanUtils.BarmanCloudBackupDelete,
 			"options", options,
 			"stdout", stdoutBuffer.String(),
 			"stderr", stderrBuffer.String())
