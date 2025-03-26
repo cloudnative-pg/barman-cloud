@@ -32,6 +32,9 @@ const (
 	// BarmanCloudBackupList is the command name for 'barman-cloud-backup-delete'
 	BarmanCloudBackupList = BarmanCloudBackup + "-list"
 
+	// BarmanCloudBackupKeep is the command name for 'barma-cloud-backup-keep'
+	BarmanCloudBackupKeep = BarmanCloudBackup + "-keep"
+
 	// BarmanCloudWalArchive is the command name for 'barman-cloud-wal-archive'
 	BarmanCloudWalArchive = "barman-cloud-wal-archive"
 
