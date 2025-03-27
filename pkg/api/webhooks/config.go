@@ -35,21 +35,21 @@ func ValidateBackupConfiguration(
 	}
 
 	credentialsCount := 0
-	if barmanObjectStore.BarmanCredentials.Azure != nil {
+	if barmanObjectStore.Azure != nil {
 		credentialsCount++
-		allErrors = barmanObjectStore.BarmanCredentials.Azure.ValidateAzureCredentials(
+		allErrors = barmanObjectStore.Azure.ValidateAzureCredentials(
 			path.Child("azureCredentials"),
 		)
 	}
-	if barmanObjectStore.BarmanCredentials.AWS != nil {
+	if barmanObjectStore.AWS != nil {
 		credentialsCount++
-		allErrors = barmanObjectStore.BarmanCredentials.AWS.ValidateAwsCredentials(
+		allErrors = barmanObjectStore.AWS.ValidateAwsCredentials(
 			path.Child("awsCredentials"),
 		)
 	}
-	if barmanObjectStore.BarmanCredentials.Google != nil {
+	if barmanObjectStore.Google != nil {
 		credentialsCount++
-		allErrors = barmanObjectStore.BarmanCredentials.Google.ValidateGCSCredentials(
+		allErrors = barmanObjectStore.Google.ValidateGCSCredentials(
 			field.NewPath("spec", "backupConfiguration", "googleCredentials"))
 	}
 	if credentialsCount == 0 {
