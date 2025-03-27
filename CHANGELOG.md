@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.1](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.0...v0.3.1) (2025-03-27)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#92](https://github.com/cloudnative-pg/barman-cloud/issues/92)) ([1e425f4](https://github.com/cloudnative-pg/barman-cloud/commit/1e425f4272b7b36b41c94ea89bbbb863ee7ed864))
+* **deps:** update kubernetes packages to v0.32.3 ([#80](https://github.com/cloudnative-pg/barman-cloud/issues/80)) ([aed9756](https://github.com/cloudnative-pg/barman-cloud/commit/aed9756f643f314fb7c6f6fd074dc7b44fd95872))
+* **deps:** update module github.com/cloudnative-pg/machinery to v0.2.0 ([#101](https://github.com/cloudnative-pg/barman-cloud/issues/101)) ([a40877d](https://github.com/cloudnative-pg/barman-cloud/commit/a40877d28dcdd403f0657640693df5bde3e98c4b))
+* **deps:** update module github.com/onsi/ginkgo/v2 to v2.23.1 ([#91](https://github.com/cloudnative-pg/barman-cloud/issues/91)) ([42588ca](https://github.com/cloudnative-pg/barman-cloud/commit/42588ca339ce6ce178f4ec1a1a301acb933785e2))
+* **deps:** update module sigs.k8s.io/controller-runtime to v0.20.4 ([#77](https://github.com/cloudnative-pg/barman-cloud/issues/77)) ([981604e](https://github.com/cloudnative-pg/barman-cloud/commit/981604e2d24940f84f6f88088c920ce3e37eb172))
+* remove lz4, xz, and zstd compression for backups ([#89](https://github.com/cloudnative-pg/barman-cloud/issues/89)) ([d53d05b](https://github.com/cloudnative-pg/barman-cloud/commit/d53d05b8f023dab6be20bd9bbb0b592470ef8662)), closes [#88](https://github.com/cloudnative-pg/barman-cloud/issues/88)
+* use a fixed golangci-lint version ([#94](https://github.com/cloudnative-pg/barman-cloud/issues/94)) ([b1df782](https://github.com/cloudnative-pg/barman-cloud/commit/b1df7824d821742a26cd03651ed2ab6a1426e397))
+
 ## [0.3.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.2.0...v0.3.0) (2025-03-18)
 
 
