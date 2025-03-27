@@ -5,13 +5,12 @@ go 1.23.0
 toolchain go1.24.1
 
 require (
-	github.com/blang/semver v3.5.1+incompatible
 	github.com/cloudnative-pg/machinery v0.1.0
 	github.com/onsi/ginkgo/v2 v2.23.3
 	github.com/onsi/gomega v1.36.3
 	k8s.io/api v0.32.2
 	k8s.io/apimachinery v0.32.2
-	sigs.k8s.io/controller-runtime v0.20.2
+	sigs.k8s.io/controller-runtime v0.20.4
 )
 
 require (
