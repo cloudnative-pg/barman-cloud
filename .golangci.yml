@@ -1,45 +1,25 @@
-linters-settings:
-  lll:
-    line-length: 120
-  gci:
-    sections:
-      - standard
-      - default
-      - prefix(github.com/cloudnative-pg/barman-cloud)
-      - blank
-      - dot
-  nlreturn:
-    # Size of the block (including return statement that is still "OK")
-    # so no return split required.
-    # Default: 1
-    block-size: 3
-
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
     - asciicheck
     - bodyclose
+    - copyloopvar
     - dogsled
     - dupl
     - durationcheck
     - errcheck
-    - copyloopvar
-    - gci
+    - ginkgolinter
     - gocognit
     - goconst
     - gocritic
     - gocyclo
-    - gofmt
-    - gofumpt
     - goheader
-    - goimports
     - gomoddirectives
     - gomodguard
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
-    - ginkgolinter
     - importas
     - ineffassign
     - lll
@@ -53,44 +33,52 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - stylecheck
     - thelper
     - tparallel
-    - typecheck
     - unconvert
     - unparam
     - unused
     - wastedassign
     - whitespace
-  # TODO: Reverse the configuration to enable all linters and disable some
-  #enable-all: true
-  #disable:
-  #  - depguard
-  #  - execinquery
-  #  - exhaustruct
-  #  - exportloopref
-  #  - funlen
-  #  - gomnd
-  #  - paralleltest
-  #  - testpackage
-  #  - wsl
-
-issues:
-  exclude-rules:
-    # Allow dot imports for ginkgo and gomega
-    - source: ginkgo|gomega
-      linters:
-      - revive
-      text: "should not use dot imports"
-    # Exclude some linters from running on tests files.
-    - path: _test\.go
-      linters:
-        - goconst
-    # Exclude lll issues for lines with long annotations
-    - linters:
-      - lll
-      source: "//\\s*\\+"
-  exclude-use-default: false
-
-run:
-  timeout: 5m
+  settings:
+    lll:
+      line-length: 120
+    nlreturn:
+      block-size: 3
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - revive
+        text: should not use dot imports
+        source: ginkgo|gomega
+      - linters:
+          - goconst
+        path: _test\.go
+      - linters:
+          - lll
+        source: //\s*\+
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/cloudnative-pg/barman-cloud)
+        - blank
+        - dot
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
