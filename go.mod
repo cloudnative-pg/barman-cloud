@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.24.1
 
 require (
-	github.com/cloudnative-pg/machinery v0.1.0
+	github.com/cloudnative-pg/machinery v0.2.0
 	github.com/onsi/ginkgo/v2 v2.23.3
 	github.com/onsi/gomega v1.36.3
 	k8s.io/api v0.32.3
