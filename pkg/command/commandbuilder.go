@@ -18,12 +18,8 @@ package command
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/cloudnative-pg/machinery/pkg/log"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
-	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
 )
 
 // CloudWalRestoreOptions returns the options needed to execute the barman command successfully
@@ -82,30 +78,13 @@ func appendCloudProviderOptions(
 	options []string,
 	credentials barmanApi.BarmanCredentials,
 ) ([]string, error) {
-	logger := log.FromContext(ctx)
-
-	capabilities, err := barmanCapabilities.CurrentCapabilities()
-	if err != nil {
-		return nil, err
-	}
-
 	switch {
 	case credentials.AWS != nil:
-		if capabilities.HasS3 {
-			options = append(
-				options,
-				"--cloud-provider",
-				"aws-s3")
-		}
+		options = append(
+			options,
+			"--cloud-provider",
+			"aws-s3")
 	case credentials.Azure != nil:
-		if !capabilities.HasAzure {
-			err := fmt.Errorf(
-				"barman >= 2.13 is required to use Azure object storage, current: %v",
-				capabilities.Version)
-			logger.Error(err, "Barman version not supported")
-			return nil, err
-		}
-
 		options = append(
 			options,
 			"--cloud-provider",
@@ -119,26 +98,11 @@ func appendCloudProviderOptions(
 			break
 		}
 
-		if !capabilities.HasAzureManagedIdentity {
-			err := fmt.Errorf(
-				"barman >= 2.18 is required to use azureInheritFromAzureAD, current: %v",
-				capabilities.Version)
-			logger.Error(err, "Barman version not supported")
-			return nil, err
-		}
-
 		options = append(
 			options,
 			"--credential",
 			"managed-identity")
 	case credentials.Google != nil:
-		if !capabilities.HasGoogle {
-			err := fmt.Errorf(
-				"barman >= 2.19 is required to use Google Cloud Storage, current: %v",
-				capabilities.Version)
-			logger.Error(err, "Barman version not supported")
-			return nil, err
-		}
 		options = append(
 			options,
 			"--cloud-provider",

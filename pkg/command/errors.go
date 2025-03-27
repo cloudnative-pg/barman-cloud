@@ -17,12 +17,7 @@ limitations under the License.
 package command
 
 import (
-	"context"
 	"fmt"
-
-	"github.com/cloudnative-pg/machinery/pkg/log"
-
-	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
 )
 
 const (
@@ -55,9 +50,6 @@ var errorDescriptions = map[int]string{
 type CloudRestoreError struct {
 	// The exit code returned by Barman
 	ExitCode int
-
-	// This is true when Barman can return significant error codes
-	HasRestoreErrorCodes bool
 }
 
 // Error implements the error interface
@@ -73,33 +65,17 @@ func (err *CloudRestoreError) Error() string {
 // IsRetriable returns true whether the error is temporary, and
 // it could be a good idea to retry the restore later
 func (err *CloudRestoreError) IsRetriable() bool {
-	return (err.ExitCode == networkErrorCode || err.ExitCode == generalErrorCode) && err.HasRestoreErrorCodes
+	return err.ExitCode == networkErrorCode || err.ExitCode == generalErrorCode
 }
 
 // UnmarshalBarmanCloudRestoreExitCode returns the correct error
 // for a certain barman-cloud-restore exit code
-func UnmarshalBarmanCloudRestoreExitCode(ctx context.Context, exitCode int) error {
+func UnmarshalBarmanCloudRestoreExitCode(exitCode int) error {
 	if exitCode == 0 {
 		return nil
 	}
 
-	var currentCapabilities *barmanCapabilities.Capabilities
-	currentCapabilities, err := barmanCapabilities.CurrentCapabilities()
-	if err != nil {
-		// TODO: this function should really receive a context
-		logger := log.FromContext(ctx)
-		logger.Error(err, "error while detecting Barman capabilities")
-
-		// We default to old exit codes when we could not detect
-		// the Barman capabilities
-		return &CloudRestoreError{
-			ExitCode:             exitCode,
-			HasRestoreErrorCodes: false,
-		}
-	}
-
 	return &CloudRestoreError{
-		ExitCode:             exitCode,
-		HasRestoreErrorCodes: currentCapabilities.HasErrorCodesForRestore,
+		ExitCode: exitCode,
 	}
 }

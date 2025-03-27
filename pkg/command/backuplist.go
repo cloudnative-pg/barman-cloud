@@ -49,8 +49,8 @@ import (
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
-	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
 	"github.com/cloudnative-pg/barman-cloud/pkg/catalog"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 func executeQueryCommand(
@@ -108,7 +108,7 @@ func GetBackupList(
 
 	rawJSON, err := executeQueryCommand(
 		ctx,
-		barmanCapabilities.BarmanCloudBackupList,
+		utils.BarmanCloudBackupList,
 		barmanConfiguration,
 		serverName,
 		[]string{},
@@ -120,7 +120,7 @@ func GetBackupList(
 	backupList, err := catalog.NewCatalogFromBarmanCloudBackupList(rawJSON)
 	if err != nil {
 		contextLogger.Error(err, "Can't parse barman output",
-			"command", barmanCapabilities.BarmanCloudBackupList,
+			"command", utils.BarmanCloudBackupList,
 			"output", rawJSON)
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func GetBackupByName(
 
 	rawJSON, err := executeQueryCommand(
 		ctx,
-		barmanCapabilities.BarmanCloudBackupShow,
+		utils.BarmanCloudBackupShow,
 		barmanConfiguration,
 		serverName,
 		[]string{backupName},

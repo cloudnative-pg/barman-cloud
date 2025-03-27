@@ -23,12 +23,10 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/blang/semver"
 	"github.com/cloudnative-pg/machinery/pkg/execlog"
 	"github.com/cloudnative-pg/machinery/pkg/log"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
-	barmanCapabilities "github.com/cloudnative-pg/barman-cloud/pkg/capabilities"
 	barmanCatalog "github.com/cloudnative-pg/barman-cloud/pkg/catalog"
 	barmanCommand "github.com/cloudnative-pg/barman-cloud/pkg/command"
 	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
@@ -37,17 +35,14 @@ import (
 // Command represents a barman backup command
 type Command struct {
 	configuration *barmanApi.BarmanObjectStoreConfiguration
-	capabilities  *barmanCapabilities.Capabilities
 }
 
 // NewBackupCommand creates a new barman backup command
 func NewBackupCommand(
 	configuration *barmanApi.BarmanObjectStoreConfiguration,
-	capabilities *barmanCapabilities.Capabilities,
 ) *Command {
 	return &Command{
 		configuration: configuration,
-		capabilities:  capabilities,
 	}
 }
 
@@ -57,11 +52,6 @@ func (b *Command) GetDataConfiguration(
 ) ([]string, error) {
 	if b.configuration.Data == nil {
 		return options, nil
-	}
-
-	if !b.capabilities.HasCompression(b.configuration.Data.Compression) {
-		return nil, fmt.Errorf("%v compression is not supported in Barman %v",
-			b.configuration.Data.Compression, b.capabilities.Version)
 	}
 
 	if len(b.configuration.Data.Compression) != 0 {
@@ -99,14 +89,10 @@ func (b *Command) GetBarmanCloudBackupOptions(
 	ctx context.Context,
 	backupName string,
 	serverName string,
-	exec barmanCapabilities.LegacyExecutor,
 ) ([]string, error) {
 	options := []string{
 		"--user", "postgres",
-	}
-
-	if b.capabilities.ShouldExecuteBackupWithName(exec) {
-		options = append(options, "--name", backupName)
+		"--name", backupName,
 	}
 
 	options, err := b.GetDataConfiguration(options)
@@ -147,41 +133,15 @@ func (b *Command) GetExecutedBackupInfo(
 	ctx context.Context,
 	backupName string,
 	serverName string,
-	exec barmanCapabilities.LegacyExecutor,
 	env []string,
 ) (*barmanCatalog.BarmanBackup, error) {
-	if b.capabilities.ShouldExecuteBackupWithName(exec) {
-		return barmanCommand.GetBackupByName(
-			ctx,
-			backupName,
-			serverName,
-			b.configuration,
-			env,
-		)
-	}
-
-	// we don't know the id or the name of the executed backup so it fetches the last executed barman backup.
-	// it could create issues in case of concurrent backups. It is a deprecated way of detecting the backup.
-	return barmanCommand.GetLatestBackup(
+	return barmanCommand.GetBackupByName(
 		ctx,
+		backupName,
 		serverName,
 		b.configuration,
 		env,
 	)
-}
-
-// IsCompatible checks if barman can back up this version of PostgreSQL
-func (b *Command) IsCompatible(postgresVers semver.Version) error {
-	switch {
-	case postgresVers.Major == 15 && b.capabilities.Version.Major < 3:
-		return fmt.Errorf(
-			"PostgreSQL %d is not supported by Barman %d.x",
-			postgresVers.Major,
-			b.capabilities.Version.Major,
-		)
-	default:
-		return nil
-	}
 }
 
 // Take takes a backup
@@ -190,12 +150,11 @@ func (b *Command) Take(
 	backupName string,
 	serverName string,
 	env []string,
-	legacyExecutor barmanCapabilities.LegacyExecutor,
 	backupTemporaryDirectory string,
 ) error {
 	log := log.FromContext(ctx)
 
-	options, backupErr := b.GetBarmanCloudBackupOptions(ctx, backupName, serverName, legacyExecutor)
+	options, backupErr := b.GetBarmanCloudBackupOptions(ctx, backupName, serverName)
 	if backupErr != nil {
 		log.Error(backupErr, "while getting barman-cloud-backup options")
 		return backupErr
@@ -204,10 +163,10 @@ func (b *Command) Take(
 	// record the backup beginning
 	log.Info("Starting barman-cloud-backup", "options", options)
 
-	cmd := exec.Command(barmanCapabilities.BarmanCloudBackup, options...) // #nosec G204
+	cmd := exec.Command(utils.BarmanCloudBackup, options...) // #nosec G204
 	cmd.Env = env
 	cmd.Env = append(cmd.Env, "TMPDIR="+backupTemporaryDirectory)
-	if err := execlog.RunStreaming(cmd, barmanCapabilities.BarmanCloudBackup); err != nil {
+	if err := execlog.RunStreaming(cmd, utils.BarmanCloudBackup); err != nil {
 		const badArgumentsErrorCode = "3"
 		if err.Error() == badArgumentsErrorCode {
 			descriptiveError := errors.New("invalid arguments for barman-cloud-backup. " +
