@@ -97,7 +97,7 @@ func (archiver *WALArchiver) GatherWALFilesToArchive(
 			return nil
 		}
 
-		walList = append(walList, filepath.Join("pg_wal", walFileName))
+		walList = append(walList, filepath.Join(pgWalDirectory, walFileName))
 		return nil
 	})
 
