@@ -106,6 +106,32 @@ var _ = Describe("useDefaultAzureCredentials", func() {
 		Expect(useDefaultAzureCredentials(newCtx)).To(BeTrue())
 	})
 
+	// Env var should override the ctx value
+
+	It("should be true if env var set to true even if ctx contains false value", func(ctx SpecContext) {
+		os.Setenv(barmanUseDefaultAzureCredentials, "true")
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, false)
+		Expect(useDefaultAzureCredentials(newCtx)).To(BeTrue())
+	})
+
+	It("should be false if env var set to false even if ctx contains true value", func(ctx SpecContext) {
+		os.Setenv(barmanUseDefaultAzureCredentials, "false")
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, true)
+		Expect(useDefaultAzureCredentials(newCtx)).To(BeFalse())
+	})
+
+	It("should be false if env var is empty if ctx contains false value", func(ctx SpecContext) {
+		os.Setenv(barmanUseDefaultAzureCredentials, "")
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, false)
+		Expect(useDefaultAzureCredentials(newCtx)).To(BeFalse())
+	})
+
+	It("should be true if env var is empty if ctx contains true value", func(ctx SpecContext) {
+		os.Setenv(barmanUseDefaultAzureCredentials, "")
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, true)
+		Expect(useDefaultAzureCredentials(newCtx)).To(BeTrue())
+	})
+
 	It("should be false if env var set with invalid value", func(ctx SpecContext) {
 		os.Setenv(barmanUseDefaultAzureCredentials, "invalidValue")
 		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, true)
