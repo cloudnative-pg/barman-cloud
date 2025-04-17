@@ -114,26 +114,31 @@ func (archiver *BarmanArchiver) ArchiveList(
 			walStatus.StartTime = time.Now()
 			walStatus.Err = archiver.Archive(ctx, walNames[walIndex], options)
 			walStatus.EndTime = time.Now()
-			if walStatus.Err == nil && walIndex != 0 {
-				walStatus.Err = archiver.Touch(walNames[walIndex])
-			}
 
-			elapsedWalTime := walStatus.EndTime.Sub(walStatus.StartTime)
-			if walStatus.Err != nil {
-				contextLog.Warning(
+			walContextLog := contextLog.WithValues(
+				"walName", walStatus.WalName,
+				"startTime", walStatus.StartTime,
+				"endTime", walStatus.EndTime,
+				"elapsedWalTime", walStatus.EndTime.Sub(walStatus.StartTime),
+			)
+
+			switch {
+			case walStatus.Err != nil:
+				walContextLog.Warning(
 					"Failed archiving WAL: PostgreSQL will retry",
-					"walName", walStatus.WalName,
-					"startTime", walStatus.StartTime,
-					"endTime", walStatus.EndTime,
-					"elapsedWalTime", elapsedWalTime,
 					"error", walStatus.Err)
-			} else {
-				contextLog.Info(
-					"Archived WAL file",
-					"walName", walStatus.WalName,
-					"startTime", walStatus.StartTime,
-					"endTime", walStatus.EndTime,
-					"elapsedWalTime", elapsedWalTime)
+
+			case walIndex == 0:
+				walContextLog.Info("Archived WAL file")
+
+			default:
+				if err := archiver.Touch(walNames[walIndex]); err != nil {
+					walContextLog.Warning(
+						"WAL file pre-archived, but it could not be added to the spool. PostgreSQL will retry",
+						"error", err)
+				} else {
+					walContextLog.Info("Pre-archived WAL file (parallel)")
+				}
 			}
 
 			waitGroup.Done()
