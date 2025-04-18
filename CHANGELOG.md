@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.1...v0.3.2) (2025-04-17)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#109](https://github.com/cloudnative-pg/barman-cloud/issues/109)) ([6bb2b14](https://github.com/cloudnative-pg/barman-cloud/commit/6bb2b14d3e54d9d9ec27377430f93f7c7077d34e))
+
 ## [0.3.1](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.0...v0.3.1) (2025-03-27)
 
 
