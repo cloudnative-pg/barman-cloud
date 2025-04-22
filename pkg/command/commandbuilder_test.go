@@ -105,4 +105,10 @@ var _ = Describe("useDefaultAzureCredentials", func() {
 		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, true)
 		Expect(useDefaultAzureCredentials(newCtx)).To(BeTrue())
 	})
+
+	It("should be false if env var set with invalid value", func(ctx SpecContext) {
+		os.Setenv(barmanUseDefaultAzureCredentials, "invalidValue")
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, true)
+		Expect(useDefaultAzureCredentials(newCtx)).To(BeFalse())
+	})
 })
