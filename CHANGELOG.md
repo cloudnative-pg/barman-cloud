@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.2](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.1...v0.3.2) (2025-06-03)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#109](https://github.com/cloudnative-pg/barman-cloud/issues/109)) ([6bb2b14](https://github.com/cloudnative-pg/barman-cloud/commit/6bb2b14d3e54d9d9ec27377430f93f7c7077d34e))
+* **deps:** update kubernetes packages to v0.33.1 ([#117](https://github.com/cloudnative-pg/barman-cloud/issues/117)) ([da740ad](https://github.com/cloudnative-pg/barman-cloud/commit/da740adb71f97e65c9471276c20bcf5b3972eeba))
+
 ## [0.3.1](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.0...v0.3.1) (2025-03-27)
 
 
