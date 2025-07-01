@@ -257,7 +257,7 @@ func envSetAzureCredentials(
 		if err != nil {
 			return nil, err
 		}
-		env = append(env, fmt.Sprintf("AZURE_STORAGE_SAS_TOKEN=%s", storageSasToken))
+		env = append(env, fmt.Sprintf("AZURE_STORAGE_SAS_TOKEN='%s'", storageSasToken))
 	}
 
 	if configuration.Azure.ConnectionString != nil {
@@ -270,7 +270,7 @@ func envSetAzureCredentials(
 		if err != nil {
 			return nil, err
 		}
-		env = append(env, fmt.Sprintf("AZURE_STORAGE_CONNECTION_STRING=%s", connString))
+		env = append(env, fmt.Sprintf("AZURE_STORAGE_CONNECTION_STRING='%s'", connString))
 	}
 
 	return env, nil
