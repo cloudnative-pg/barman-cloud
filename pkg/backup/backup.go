@@ -91,8 +91,8 @@ func (b *Command) GetBarmanCloudBackupOptions(
 	serverName string,
 ) ([]string, error) {
 	options := []string{
-		"--user", "postgres",
-		"--name", backupName,
+		"-U", "postgres",
+		"-n", backupName,
 	}
 
 	options, err := b.GetDataConfiguration(options)
