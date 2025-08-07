@@ -18,6 +18,8 @@ package command
 
 import (
 	"context"
+	"os"
+	"strconv"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 )
@@ -117,16 +119,29 @@ type contextKey string
 // contextKeyUseDefaultAzureCredentials contains a bool indicating if the default azure credentials should be used
 const contextKeyUseDefaultAzureCredentials contextKey = "useDefaultAzureCredentials"
 
+// Env variable overrides any value set in ctx value contextKeyUseDefaultAzureCredentials
+const barmanUseDefaultAzureCredentials string = "BARMAN_USE_DEFAULT_AZURE_CREDENTIALS"
+
 func useDefaultAzureCredentials(ctx context.Context) bool {
-	v := ctx.Value(contextKeyUseDefaultAzureCredentials)
-	if v == nil {
-		return false
+	val := os.Getenv(barmanUseDefaultAzureCredentials)
+	if len(val) == 0 {
+		v := ctx.Value(contextKeyUseDefaultAzureCredentials)
+		if v == nil {
+			return false
+		}
+		result, ok := v.(bool)
+		if !ok {
+			return false
+		}
+		return result
+	} else {
+		v, err := strconv.ParseBool(val)
+		if err != nil {
+			return false
+		}
+		return v
 	}
-	result, ok := v.(bool)
-	if !ok {
-		return false
-	}
-	return result
+
 }
 
 // ContextWithDefaultAzureCredentials create a context that contains the contextKeyUseDefaultAzureCredentials flag.
