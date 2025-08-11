@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.2...v0.3.3) (2025-08-11)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/cloudnative-pg/machinery to v0.3.1 ([#142](https://github.com/cloudnative-pg/barman-cloud/issues/142)) ([276b8dd](https://github.com/cloudnative-pg/barman-cloud/commit/276b8dd9cb9c99062bba20399ccaf996e16e4c86))
+
 ## [0.3.2](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.1...v0.3.2) (2025-08-11)
 
 
