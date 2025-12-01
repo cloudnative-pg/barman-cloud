@@ -193,7 +193,12 @@ func (archiver *BarmanArchiver) CheckWalArchiveDestination(ctx context.Context, 
 	return nil
 }
 
-// fadviseNotUsed issues an fadvise to the OS to inform that the file is not needed anymore
+// fadviseNotUsed issues an fadvise to the OS to inform that the file is not needed anymore.
+// This is necessary because we run in a separate container from PostgreSQL in Kubernetes.
+// Without this hint, archived WALs accumulate in page cache since memory pressure on large
+// machines is typically insufficient to evict them, wasting memory that could be used for
+// active workloads. PostgreSQL handles its own cache management, but our archiver sidecar
+// needs to do the same for the files it processes.
 func (archiver *BarmanArchiver) fadviseNotUsed(fileName string) (err error) {
 	file, err := os.Open(filepath.Clean(fileName))
 	if err != nil {
