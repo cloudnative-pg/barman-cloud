@@ -6,7 +6,7 @@ toolchain go1.25.1
 
 require (
 	github.com/cloudnative-pg/machinery v0.3.1
-	github.com/onsi/ginkgo/v2 v2.26.0
+	github.com/onsi/ginkgo/v2 v2.27.2
 	github.com/onsi/gomega v1.38.2
 	k8s.io/api v0.33.3
 	k8s.io/apimachinery v0.33.3
@@ -49,7 +49,6 @@ require (
 	github.com/spf13/pflag v1.0.7 // indirect
 	github.com/thoas/go-funk v0.9.3 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
