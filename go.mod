@@ -8,7 +8,7 @@ require (
 	github.com/cloudnative-pg/machinery v0.3.1
 	github.com/onsi/ginkgo/v2 v2.27.2
 	github.com/onsi/gomega v1.38.2
-	golang.org/x/sys v0.35.0
+	golang.org/x/sys v0.38.0
 	k8s.io/api v0.33.3
 	k8s.io/apimachinery v0.33.3
 	sigs.k8s.io/controller-runtime v0.21.0
