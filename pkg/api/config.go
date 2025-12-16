@@ -116,9 +116,18 @@ type S3Credentials struct {
 // information. If the connection string is not specified, one (and only one)
 // of the following authentication methods must be specified:
 //
+<<<<<<< HEAD
 // - storageKey (requires storageAccount)
 // - storageSasToken (requires storageAccount)
 // - inheritFromAzureAD (inheriting credentials from the pod environment)
+=======
+// - storageKey
+// - storageSasToken
+//
+// - inheriting the credentials from the pod environment by setting inheritFromAzureAD to true
+//
+// - using the default Azure authentication flow by setting useDefaultAzureCredentials to true
+>>>>>>> ea1d10e (feat: add DefaultAzureCredential authentication support)
 type AzureCredentials struct {
 	// The connection string to be used
 	// +optional
@@ -141,6 +150,11 @@ type AzureCredentials struct {
 	// Use the Azure AD based authentication without providing explicitly the keys.
 	// +optional
 	InheritFromAzureAD bool `json:"inheritFromAzureAD,omitempty"`
+
+	// Use the default Azure authentication flow, which includes DefaultAzureCredential.
+	// This allows authentication using environment variables and managed identities.
+	// +optional
+	UseDefaultAzureCredentials bool `json:"useDefaultAzureCredentials,omitempty"`
 }
 
 // GoogleCredentials is the type for the Google Cloud Storage credentials.
@@ -332,6 +346,9 @@ func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.
 	if azure.InheritFromAzureAD {
 		secrets++
 	}
+	if azure.UseDefaultAzureCredentials {
+		secrets++
+	}
 	if azure.StorageKey != nil {
 		secrets++
 	}
@@ -346,7 +363,7 @@ func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.
 				path,
 				azure,
 				"when connection string is not specified, one and only one of "+
-					"storage key, storage SAS token, or Azure AD authentication is required"))
+					"storage key, storage SAS token, Azure AD authentication, or default Azure credentials is required"))
 	}
 
 	if (secrets != 0 || azure.StorageAccount != nil) && azure.ConnectionString != nil {

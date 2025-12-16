@@ -91,17 +91,28 @@ func appendCloudProviderOptions(
 			"azure-blob-storage")
 
 		if useDefaultAzureCredentials(ctx) {
+			options = append(
+				options,
+				"--credential",
+				"default")
 			break
 		}
 
-		if !credentials.Azure.InheritFromAzureAD {
+		if credentials.Azure.UseDefaultAzureCredentials {
+			options = append(
+				options,
+				"--credential",
+				"default")
 			break
 		}
 
-		options = append(
-			options,
-			"--credential",
-			"managed-identity")
+		if credentials.Azure.InheritFromAzureAD {
+			options = append(
+				options,
+				"--credential",
+				"managed-identity")
+			break
+		}
 	case credentials.Google != nil:
 		options = append(
 			options,
