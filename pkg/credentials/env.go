@@ -218,6 +218,10 @@ func envSetAzureCredentials(
 		return env, nil
 	}
 
+	if configuration.Azure.UseDefaultAzureCredentials {
+		return env, nil
+	}
+
 	// Get storage account name
 	if configuration.Azure.StorageAccount != nil {
 		storageAccount, err := extractValueFromSecret(
