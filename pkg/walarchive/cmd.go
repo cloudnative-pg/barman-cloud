@@ -20,16 +20,13 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/cloudnative-pg/machinery/pkg/execlog"
 	"github.com/cloudnative-pg/machinery/pkg/fileutils"
 	"github.com/cloudnative-pg/machinery/pkg/log"
-	"golang.org/x/sys/unix"
 
 	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
@@ -189,33 +186,6 @@ func (archiver *BarmanArchiver) CheckWalArchiveDestination(ctx context.Context, 
 	}
 
 	contextLogger.Trace("barman-cloud-check-wal-archive command execution completed")
-
-	return nil
-}
-
-// fadviseNotUsed issues an fadvise to the OS to inform that the file is not needed anymore.
-// This is necessary because we run in a separate container from PostgreSQL in Kubernetes.
-// Without this hint, archived WALs accumulate in page cache since memory pressure on large
-// machines is typically insufficient to evict them, wasting memory that could be used for
-// active workloads. PostgreSQL handles its own cache management, but our archiver sidecar
-// needs to do the same for the files it processes.
-func (archiver *BarmanArchiver) fadviseNotUsed(fileName string) (err error) {
-	file, err := os.Open(filepath.Clean(fileName))
-	if err != nil {
-		return fmt.Errorf("error opening file %s for fadvise: %w", fileName, err)
-	}
-
-	defer func(file *os.File) {
-		closeErr := file.Close()
-		if closeErr != nil && err == nil {
-			err = fmt.Errorf("error closing file %s for fadvise: %w", fileName, closeErr)
-		}
-	}(file)
-
-	fd := int(file.Fd())
-	if fadviseErr := unix.Fadvise(fd, 0, 0, unix.FADV_DONTNEED); fadviseErr != nil {
-		return fmt.Errorf("error issuing fadvise on file %s: %w", fileName, fadviseErr)
-	}
 
 	return nil
 }
