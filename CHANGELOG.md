@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.3...v0.4.0) (2025-12-24)
+
+
+### Features
+
+* drop archived WAL files from OS page cache ([#169](https://github.com/cloudnative-pg/barman-cloud/issues/169)) ([1d476f1](https://github.com/cloudnative-pg/barman-cloud/commit/1d476f125c5b0f36402998e791cb7e6ae4fed9ae))
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#148](https://github.com/cloudnative-pg/barman-cloud/issues/148)) ([549ec2f](https://github.com/cloudnative-pg/barman-cloud/commit/549ec2f47526ffa0ba40d10e55f44e7b731ed9b7))
+* **deps:** update all non-major go dependencies ([#171](https://github.com/cloudnative-pg/barman-cloud/issues/171)) ([1d0e97b](https://github.com/cloudnative-pg/barman-cloud/commit/1d0e97bf6f72c8c351a4fed3a3df878655d5c43e))
+* **deps:** update module github.com/onsi/ginkgo/v2 to v2.27.2 ([#165](https://github.com/cloudnative-pg/barman-cloud/issues/165)) ([35b3c9b](https://github.com/cloudnative-pg/barman-cloud/commit/35b3c9b9549a49a3527cbb2ad72fd1f20466589b))
+* **deps:** update module k8s.io/api to v0.35.0 ([#147](https://github.com/cloudnative-pg/barman-cloud/issues/147)) ([cf14db6](https://github.com/cloudnative-pg/barman-cloud/commit/cf14db656f0dfa9911a6bc66910e4a5daa9d8eff))
+
 ## [0.3.3](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.2...v0.3.3) (2025-08-11)
 
 
