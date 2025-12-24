@@ -53,6 +53,10 @@ linters:
         text: should not use dot imports
         source: ginkgo|gomega
       - linters:
+          - revive
+        text: avoid meaningless package names
+        source: ^package (api|utils)$
+      - linters:
           - goconst
         path: _test\.go
       - linters:
