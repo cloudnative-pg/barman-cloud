@@ -120,6 +120,8 @@ type S3Credentials struct {
 // - storageSasToken
 //
 // - inheriting the credentials from the pod environment by setting inheritFromAzureAD to true
+//
+// - using the default Azure authentication flow by setting useDefaultAzureCredentials to true
 type AzureCredentials struct {
 	// The connection string to be used
 	// +optional
@@ -142,6 +144,11 @@ type AzureCredentials struct {
 	// Use the Azure AD based authentication without providing explicitly the keys.
 	// +optional
 	InheritFromAzureAD bool `json:"inheritFromAzureAD,omitempty"`
+
+	// Use the default Azure authentication flow, which includes DefaultAzureCredential.
+	// This allows authentication using environment variables and managed identities.
+	// +optional
+	UseDefaultAzureCredentials bool `json:"useDefaultAzureCredentials,omitempty"`
 }
 
 // GoogleCredentials is the type for the Google Cloud Storage credentials.
@@ -333,6 +340,9 @@ func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.
 	if azure.InheritFromAzureAD {
 		secrets++
 	}
+	if azure.UseDefaultAzureCredentials {
+		secrets++
+	}
 	if azure.StorageKey != nil {
 		secrets++
 	}
@@ -347,7 +357,7 @@ func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.
 				path,
 				azure,
 				"when connection string is not specified, one and only one of "+
-					"storage key and storage SAS token is allowed"))
+					"storage key, storage SAS token, or default azure credentials is allowed"))
 	}
 
 	if secrets != 0 && azure.ConnectionString != nil {
