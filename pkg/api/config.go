@@ -334,21 +334,21 @@ func (crendentials BarmanCredentials) ArePopulated() bool {
 func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.ErrorList {
 	allErrors := field.ErrorList{}
 
-	secrets := 0
+	authMethods := 0
 	if azure.InheritFromAzureAD {
-		secrets++
+		authMethods++
 	}
 	if azure.UseDefaultAzureCredentials {
-		secrets++
+		authMethods++
 	}
 	if azure.StorageKey != nil {
-		secrets++
+		authMethods++
 	}
 	if azure.StorageSasToken != nil {
-		secrets++
+		authMethods++
 	}
 
-	if secrets != 1 && azure.ConnectionString == nil {
+	if authMethods != 1 && azure.ConnectionString == nil {
 		allErrors = append(
 			allErrors,
 			field.Invalid(
@@ -358,7 +358,7 @@ func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.
 					"storage key, storage SAS token, Azure AD authentication, or default Azure credentials is required"))
 	}
 
-	if (secrets != 0 || azure.StorageAccount != nil) && azure.ConnectionString != nil {
+	if (authMethods != 0 || azure.StorageAccount != nil) && azure.ConnectionString != nil {
 		allErrors = append(
 			allErrors,
 			field.Invalid(
