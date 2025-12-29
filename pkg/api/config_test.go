@@ -223,4 +223,28 @@ var _ = Describe("azure credentials", func() {
 		}
 		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
 	})
+
+	It("is not correct when storage key is specified without storage account", func() {
+		azureCredentials := AzureCredentials{
+			StorageKey: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageKey",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+	})
+
+	It("is not correct when SAS token is specified without storage account", func() {
+		azureCredentials := AzureCredentials{
+			StorageSasToken: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "sasToken",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+	})
 })

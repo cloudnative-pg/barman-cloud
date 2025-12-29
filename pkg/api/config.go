@@ -360,6 +360,16 @@ func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.
 					"must be empty"))
 	}
 
+	// StorageAccount is required when using explicit credentials (StorageKey or StorageSasToken)
+	if (azure.StorageKey != nil || azure.StorageSasToken != nil) && azure.StorageAccount == nil {
+		allErrors = append(
+			allErrors,
+			field.Invalid(
+				path,
+				azure,
+				"storage account must be specified when using storage key or SAS token"))
+	}
+
 	return allErrors
 }
 
