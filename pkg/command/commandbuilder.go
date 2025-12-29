@@ -141,9 +141,10 @@ func useDefaultAzureCredentials(ctx context.Context) bool {
 	return result
 }
 
-// ContextWithDefaultAzureCredentials create a context that contains the contextKeyUseDefaultAzureCredentials flag.
+// ContextWithDefaultAzureCredentials creates a context that contains the contextKeyUseDefaultAzureCredentials flag.
 // When set to true barman-cloud will use the default Azure credentials.
-// Deprecated: use the api azureCredentials.UseDefaultAzureCredentials
+//
+// Deprecated: Use AzureCredentials.UseDefaultAzureCredentials instead.
 func ContextWithDefaultAzureCredentials(ctx context.Context, enabled bool) context.Context {
 	return context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, enabled)
 }

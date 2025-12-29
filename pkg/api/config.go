@@ -116,18 +116,10 @@ type S3Credentials struct {
 // information. If the connection string is not specified, one (and only one)
 // of the following authentication methods must be specified:
 //
-<<<<<<< HEAD
 // - storageKey (requires storageAccount)
 // - storageSasToken (requires storageAccount)
 // - inheritFromAzureAD (inheriting credentials from the pod environment)
-=======
-// - storageKey
-// - storageSasToken
-//
-// - inheriting the credentials from the pod environment by setting inheritFromAzureAD to true
-//
-// - using the default Azure authentication flow by setting useDefaultAzureCredentials to true
->>>>>>> ea1d10e (feat: add DefaultAzureCredential authentication support)
+// - useDefaultAzureCredentials (using the default Azure authentication flow)
 type AzureCredentials struct {
 	// The connection string to be used
 	// +optional
