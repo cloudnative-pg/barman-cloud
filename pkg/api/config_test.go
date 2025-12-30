@@ -221,7 +221,7 @@ var _ = Describe("azure credentials", func() {
 				Key: "storageAccount",
 			},
 		}
-		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
 	})
 
 	It("is not correct when storage key is specified without storage account", func() {
@@ -243,6 +243,54 @@ var _ = Describe("azure credentials", func() {
 					Name: "azure-config",
 				},
 				Key: "sasToken",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+	})
+
+	It("is not correct when both storage key and SAS token are specified", func() {
+		azureCredentials := AzureCredentials{
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageAccount",
+			},
+			StorageKey: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageKey",
+			},
+			StorageSasToken: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "sasToken",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+	})
+
+	It("is not correct when storage account is specified with connection string", func() {
+		azureCredentials := AzureCredentials{
+			ConnectionString: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "connectionString",
+			},
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageAccount",
+			},
+			StorageKey: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageKey",
 			},
 		}
 		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())

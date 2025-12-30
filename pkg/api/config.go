@@ -350,7 +350,7 @@ func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.
 					"storage key and storage SAS token is allowed"))
 	}
 
-	if secrets != 0 && azure.ConnectionString != nil {
+	if (secrets != 0 || azure.StorageAccount != nil) && azure.ConnectionString != nil {
 		allErrors = append(
 			allErrors,
 			field.Invalid(
