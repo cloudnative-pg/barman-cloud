@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1](https://github.com/cloudnative-pg/barman-cloud/compare/v0.4.0...v0.4.1) (2025-12-30)
+
+
+### Bug Fixes
+
+* **azure:** require storage account for explicit credentials ([#177](https://github.com/cloudnative-pg/barman-cloud/issues/177)) ([20b7e0e](https://github.com/cloudnative-pg/barman-cloud/commit/20b7e0e10b0f6e75828e13b89f92cf7810c4d21e))
+* **deps:** update module github.com/cloudnative-pg/machinery to v0.3.3 ([#178](https://github.com/cloudnative-pg/barman-cloud/issues/178)) ([1030369](https://github.com/cloudnative-pg/barman-cloud/commit/1030369f3b81b97116cb0e3e910562833f3180e5))
+
 ## [0.4.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.3...v0.4.0) (2025-12-24)
 
 
