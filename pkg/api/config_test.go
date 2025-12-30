@@ -46,24 +46,46 @@ var _ = Describe("DataBackupConfiguration.AppendAdditionalCommandArgs", func() {
 	})
 })
 
-var _ = Describe("WalBackupConfiguration.AppendAdditionalCommandArgs", func() {
+var _ = Describe("WalBackupConfiguration.AppendArchiveAdditionalCommandArgs", func() {
 	var options []string
-	var config DataBackupConfiguration
+	var config WalBackupConfiguration
 	BeforeEach(func() {
 		options = []string{"--option1", "--option2"}
-		config = DataBackupConfiguration{
-			AdditionalCommandArgs: []string{"--option3", "--option4"},
+		config = WalBackupConfiguration{
+			ArchiveAdditionalCommandArgs: []string{"--option3", "--option4"},
 		}
 	})
 
 	It("should append additional command args to the options", func() {
-		updatedOptions := config.AppendAdditionalCommandArgs(options)
+		updatedOptions := config.AppendArchiveAdditionalCommandArgs(options)
 		Expect(updatedOptions).To(Equal([]string{"--option1", "--option2", "--option3", "--option4"}))
 	})
 
 	It("should return the original options if there are no additional command args", func() {
-		config.AdditionalCommandArgs = nil
-		updatedOptions := config.AppendAdditionalCommandArgs(options)
+		config.ArchiveAdditionalCommandArgs = nil
+		updatedOptions := config.AppendArchiveAdditionalCommandArgs(options)
+		Expect(updatedOptions).To(Equal(options))
+	})
+})
+
+var _ = Describe("WalBackupConfiguration.AppendRestoreAdditionalCommandArgs", func() {
+	var options []string
+	var config WalBackupConfiguration
+	BeforeEach(func() {
+		options = []string{"--option1", "--option2"}
+		config = WalBackupConfiguration{
+			RestoreAdditionalCommandArgs: []string{"--option3", "--option4"},
+		}
+	})
+
+	It("should append additional command args to the options", func() {
+		updatedOptions := config.AppendRestoreAdditionalCommandArgs(options)
+		Expect(updatedOptions).To(Equal([]string{"--option1", "--option2", "--option3", "--option4"}))
+	})
+
+	It("should return the original options if there are no additional command args", func() {
+		config.RestoreAdditionalCommandArgs = nil
+		updatedOptions := config.AppendRestoreAdditionalCommandArgs(options)
 		Expect(updatedOptions).To(Equal(options))
 	})
 })
@@ -248,14 +270,16 @@ var _ = Describe("azure credentials", func() {
 		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
 	})
 
-	It("is not correct when storage account is specified with connection string", func() {
+	It("it is correct when Azure AD authentication is used", func() {
 		azureCredentials := AzureCredentials{
-			ConnectionString: &machineryapi.SecretKeySelector{
-				LocalObjectReference: machineryapi.LocalObjectReference{
-					Name: "azure-config",
-				},
-				Key: "connectionString",
-			},
+			InheritFromAzureAD: true,
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
+	})
+
+	It("is not correct when Azure AD authentication is combined with other credentials", func() {
+		azureCredentials := AzureCredentials{
+			InheritFromAzureAD: true,
 			StorageAccount: &machineryapi.SecretKeySelector{
 				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
