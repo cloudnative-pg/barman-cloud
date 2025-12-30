@@ -119,6 +119,7 @@ type S3Credentials struct {
 // - storageKey (requires storageAccount)
 // - storageSasToken (requires storageAccount)
 // - inheritFromAzureAD (inheriting credentials from the pod environment)
+// - useDefaultAzureCredentials (using the default Azure authentication flow)
 type AzureCredentials struct {
 	// The connection string to be used
 	// +optional
@@ -141,6 +142,11 @@ type AzureCredentials struct {
 	// Use the Azure AD based authentication without providing explicitly the keys.
 	// +optional
 	InheritFromAzureAD bool `json:"inheritFromAzureAD,omitempty"`
+
+	// Use the default Azure authentication flow, which includes DefaultAzureCredential.
+	// This allows authentication using environment variables and managed identities.
+	// +optional
+	UseDefaultAzureCredentials bool `json:"useDefaultAzureCredentials,omitempty"`
 }
 
 // GoogleCredentials is the type for the Google Cloud Storage credentials.
@@ -328,28 +334,31 @@ func (crendentials BarmanCredentials) ArePopulated() bool {
 func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.ErrorList {
 	allErrors := field.ErrorList{}
 
-	secrets := 0
+	authMethods := 0
 	if azure.InheritFromAzureAD {
-		secrets++
+		authMethods++
+	}
+	if azure.UseDefaultAzureCredentials {
+		authMethods++
 	}
 	if azure.StorageKey != nil {
-		secrets++
+		authMethods++
 	}
 	if azure.StorageSasToken != nil {
-		secrets++
+		authMethods++
 	}
 
-	if secrets != 1 && azure.ConnectionString == nil {
+	if authMethods != 1 && azure.ConnectionString == nil {
 		allErrors = append(
 			allErrors,
 			field.Invalid(
 				path,
 				azure,
 				"when connection string is not specified, one and only one of "+
-					"storage key, storage SAS token, or Azure AD authentication is required"))
+					"storage key, storage SAS token, Azure AD authentication, or default Azure credentials is required"))
 	}
 
-	if (secrets != 0 || azure.StorageAccount != nil) && azure.ConnectionString != nil {
+	if (authMethods != 0 || azure.StorageAccount != nil) && azure.ConnectionString != nil {
 		allErrors = append(
 			allErrors,
 			field.Invalid(

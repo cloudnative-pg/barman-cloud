@@ -20,6 +20,8 @@ import (
 	"context"
 	"strings"
 
+	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
+
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -77,5 +79,93 @@ var _ = Describe("useDefaultAzureCredentials", func() {
 	It("should be true only if ctx contains true value", func(ctx SpecContext) {
 		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, true)
 		Expect(useDefaultAzureCredentials(newCtx)).To(BeTrue())
+	})
+})
+
+var _ = Describe("AppendCloudProviderOptions with Azure credentials", func() {
+	var options []string
+
+	BeforeEach(func() {
+		options = []string{}
+	})
+
+	It("should use default credential when UseDefaultAzureCredentials is set", func(ctx SpecContext) {
+		credentials := barmanApi.BarmanCredentials{
+			Azure: &barmanApi.AzureCredentials{
+				UseDefaultAzureCredentials: true,
+			},
+		}
+		result, err := appendCloudProviderOptions(ctx, options, credentials)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(ContainElements(
+			"--cloud-provider", "azure-blob-storage",
+			"--credential", "default",
+		))
+	})
+
+	It("should use managed-identity credential when InheritFromAzureAD is set", func(ctx SpecContext) {
+		credentials := barmanApi.BarmanCredentials{
+			Azure: &barmanApi.AzureCredentials{
+				InheritFromAzureAD: true,
+			},
+		}
+		result, err := appendCloudProviderOptions(ctx, options, credentials)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(ContainElements(
+			"--cloud-provider", "azure-blob-storage",
+			"--credential", "managed-identity",
+		))
+	})
+
+	It("should not use any credential flag for explicit credentials", func(ctx SpecContext) {
+		credentials := barmanApi.BarmanCredentials{
+			Azure: &barmanApi.AzureCredentials{
+				StorageAccount: &machineryapi.SecretKeySelector{
+					LocalObjectReference: machineryapi.LocalObjectReference{
+						Name: "test",
+					},
+					Key: "account",
+				},
+				StorageKey: &machineryapi.SecretKeySelector{
+					LocalObjectReference: machineryapi.LocalObjectReference{
+						Name: "test",
+					},
+					Key: "key",
+				},
+			},
+		}
+		result, err := appendCloudProviderOptions(ctx, options, credentials)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(Equal([]string{
+			"--cloud-provider", "azure-blob-storage",
+		}))
+	})
+
+	It("should use default credential from context when context flag is set", func(ctx SpecContext) {
+		credentials := barmanApi.BarmanCredentials{
+			Azure: &barmanApi.AzureCredentials{},
+		}
+		newCtx := context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, true)
+		result, err := appendCloudProviderOptions(newCtx, options, credentials)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(ContainElements(
+			"--cloud-provider", "azure-blob-storage",
+			"--credential", "default",
+		))
+	})
+
+	It("should prioritize UseDefaultAzureCredentials over InheritFromAzureAD", func(ctx SpecContext) {
+		credentials := barmanApi.BarmanCredentials{
+			Azure: &barmanApi.AzureCredentials{
+				UseDefaultAzureCredentials: true,
+				InheritFromAzureAD:         true,
+			},
+		}
+		result, err := appendCloudProviderOptions(ctx, options, credentials)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(ContainElements(
+			"--cloud-provider", "azure-blob-storage",
+			"--credential", "default",
+		))
 	})
 })
