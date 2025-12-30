@@ -120,43 +120,7 @@ var _ = Describe("Barman credentials", func() {
 var _ = Describe("azure credentials", func() {
 	path := field.NewPath("spec", "backupConfiguration", "azureCredentials")
 
-	It("contain only one of storage account key and SAS token", func() {
-		azureCredentials := AzureCredentials{
-			StorageAccount: &machineryapi.SecretKeySelector{
-				LocalObjectReference: machineryapi.LocalObjectReference{
-					Name: "azure-config",
-				},
-				Key: "storageAccount",
-			},
-			StorageKey: &machineryapi.SecretKeySelector{
-				LocalObjectReference: machineryapi.LocalObjectReference{
-					Name: "azure-config",
-				},
-				Key: "storageKey",
-			},
-			StorageSasToken: &machineryapi.SecretKeySelector{
-				LocalObjectReference: machineryapi.LocalObjectReference{
-					Name: "azure-config",
-				},
-				Key: "sasToken",
-			},
-		}
-		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
-
-		azureCredentials = AzureCredentials{
-			StorageAccount: &machineryapi.SecretKeySelector{
-				LocalObjectReference: machineryapi.LocalObjectReference{
-					Name: "azure-config",
-				},
-				Key: "storageAccount",
-			},
-			StorageKey:      nil,
-			StorageSasToken: nil,
-		}
-		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
-	})
-
-	It("is correct when the storage key is used", func() {
+	It("it is correct when the storage key is specified", func() {
 		azureCredentials := AzureCredentials{
 			StorageAccount: &machineryapi.SecretKeySelector{
 				LocalObjectReference: machineryapi.LocalObjectReference{
@@ -175,7 +139,7 @@ var _ = Describe("azure credentials", func() {
 		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
 	})
 
-	It("is correct when the sas token is used", func() {
+	It("it is correct when the SAS token is specified", func() {
 		azureCredentials := AzureCredentials{
 			StorageAccount: &machineryapi.SecretKeySelector{
 				LocalObjectReference: machineryapi.LocalObjectReference{
@@ -194,7 +158,7 @@ var _ = Describe("azure credentials", func() {
 		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
 	})
 
-	It("is correct even if only the connection string is specified", func() {
+	It("it is correct if only the connection string is specified", func() {
 		azureCredentials := AzureCredentials{
 			ConnectionString: &machineryapi.SecretKeySelector{
 				LocalObjectReference: machineryapi.LocalObjectReference{
@@ -268,6 +232,18 @@ var _ = Describe("azure credentials", func() {
 				},
 				Key: "sasToken",
 			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+
+		azureCredentials = AzureCredentials{
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageAccount",
+			},
+			StorageKey:      nil,
+			StorageSasToken: nil,
 		}
 		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
 	})
