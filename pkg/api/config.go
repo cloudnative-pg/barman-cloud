@@ -113,13 +113,12 @@ type S3Credentials struct {
 
 // AzureCredentials is the type for the credentials to be used to upload
 // files to Azure Blob Storage. The connection string contains every needed
-// information. If the connection string is not specified, we'll need the
-// storage account name and also one (and only one) of:
+// information. If the connection string is not specified, one (and only one)
+// of the following authentication methods must be specified:
 //
-// - storageKey
-// - storageSasToken
-//
-// - inheriting the credentials from the pod environment by setting inheritFromAzureAD to true
+// - storageKey (requires storageAccount)
+// - storageSasToken (requires storageAccount)
+// - inheritFromAzureAD (inheriting credentials from the pod environment)
 type AzureCredentials struct {
 	// The connection string to be used
 	// +optional
@@ -347,10 +346,10 @@ func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.
 				path,
 				azure,
 				"when connection string is not specified, one and only one of "+
-					"storage key and storage SAS token is allowed"))
+					"storage key, storage SAS token, or Azure AD authentication is required"))
 	}
 
-	if secrets != 0 && azure.ConnectionString != nil {
+	if (secrets != 0 || azure.StorageAccount != nil) && azure.ConnectionString != nil {
 		allErrors = append(
 			allErrors,
 			field.Invalid(
@@ -358,6 +357,16 @@ func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.
 				azure,
 				"when connection string is specified, the other parameters "+
 					"must be empty"))
+	}
+
+	// StorageAccount is required when using explicit credentials (StorageKey or StorageSasToken)
+	if (azure.StorageKey != nil || azure.StorageSasToken != nil) && azure.StorageAccount == nil {
+		allErrors = append(
+			allErrors,
+			field.Invalid(
+				path,
+				azure,
+				"storage account must be specified when using storage key or SAS token"))
 	}
 
 	return allErrors

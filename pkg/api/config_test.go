@@ -46,24 +46,46 @@ var _ = Describe("DataBackupConfiguration.AppendAdditionalCommandArgs", func() {
 	})
 })
 
-var _ = Describe("WalBackupConfiguration.AppendAdditionalCommandArgs", func() {
+var _ = Describe("WalBackupConfiguration.AppendArchiveAdditionalCommandArgs", func() {
 	var options []string
-	var config DataBackupConfiguration
+	var config WalBackupConfiguration
 	BeforeEach(func() {
 		options = []string{"--option1", "--option2"}
-		config = DataBackupConfiguration{
-			AdditionalCommandArgs: []string{"--option3", "--option4"},
+		config = WalBackupConfiguration{
+			ArchiveAdditionalCommandArgs: []string{"--option3", "--option4"},
 		}
 	})
 
 	It("should append additional command args to the options", func() {
-		updatedOptions := config.AppendAdditionalCommandArgs(options)
+		updatedOptions := config.AppendArchiveAdditionalCommandArgs(options)
 		Expect(updatedOptions).To(Equal([]string{"--option1", "--option2", "--option3", "--option4"}))
 	})
 
 	It("should return the original options if there are no additional command args", func() {
-		config.AdditionalCommandArgs = nil
-		updatedOptions := config.AppendAdditionalCommandArgs(options)
+		config.ArchiveAdditionalCommandArgs = nil
+		updatedOptions := config.AppendArchiveAdditionalCommandArgs(options)
+		Expect(updatedOptions).To(Equal(options))
+	})
+})
+
+var _ = Describe("WalBackupConfiguration.AppendRestoreAdditionalCommandArgs", func() {
+	var options []string
+	var config WalBackupConfiguration
+	BeforeEach(func() {
+		options = []string{"--option1", "--option2"}
+		config = WalBackupConfiguration{
+			RestoreAdditionalCommandArgs: []string{"--option3", "--option4"},
+		}
+	})
+
+	It("should append additional command args to the options", func() {
+		updatedOptions := config.AppendRestoreAdditionalCommandArgs(options)
+		Expect(updatedOptions).To(Equal([]string{"--option1", "--option2", "--option3", "--option4"}))
+	})
+
+	It("should return the original options if there are no additional command args", func() {
+		config.RestoreAdditionalCommandArgs = nil
+		updatedOptions := config.AppendRestoreAdditionalCommandArgs(options)
 		Expect(updatedOptions).To(Equal(options))
 	})
 })
@@ -120,7 +142,99 @@ var _ = Describe("Barman credentials", func() {
 var _ = Describe("azure credentials", func() {
 	path := field.NewPath("spec", "backupConfiguration", "azureCredentials")
 
-	It("contain only one of storage account key and SAS token", func() {
+	It("it is correct when the storage key is specified", func() {
+		azureCredentials := AzureCredentials{
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageAccount",
+			},
+			StorageKey: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageKey",
+			},
+			StorageSasToken: nil,
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
+	})
+
+	It("it is correct when the SAS token is specified", func() {
+		azureCredentials := AzureCredentials{
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageAccount",
+			},
+			StorageKey: nil,
+			StorageSasToken: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "sasToken",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
+	})
+
+	It("it is correct if only the connection string is specified", func() {
+		azureCredentials := AzureCredentials{
+			ConnectionString: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "connectionString",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
+	})
+
+	It("it is not correct when the connection string is specified with other parameters", func() {
+		azureCredentials := AzureCredentials{
+			ConnectionString: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "connectionString",
+			},
+			StorageAccount: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageAccount",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+	})
+
+	It("is not correct when storage key is specified without storage account", func() {
+		azureCredentials := AzureCredentials{
+			StorageKey: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageKey",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+	})
+
+	It("is not correct when SAS token is specified without storage account", func() {
+		azureCredentials := AzureCredentials{
+			StorageSasToken: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "sasToken",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+	})
+
+	It("is not correct when both storage key and SAS token are specified", func() {
 		azureCredentials := AzureCredentials{
 			StorageAccount: &machineryapi.SecretKeySelector{
 				LocalObjectReference: machineryapi.LocalObjectReference{
@@ -156,8 +270,16 @@ var _ = Describe("azure credentials", func() {
 		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
 	})
 
-	It("is correct when the storage key is used", func() {
+	It("it is correct when Azure AD authentication is used", func() {
 		azureCredentials := AzureCredentials{
+			InheritFromAzureAD: true,
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
+	})
+
+	It("is not correct when Azure AD authentication is combined with other credentials", func() {
+		azureCredentials := AzureCredentials{
+			InheritFromAzureAD: true,
 			StorageAccount: &machineryapi.SecretKeySelector{
 				LocalObjectReference: machineryapi.LocalObjectReference{
 					Name: "azure-config",
@@ -170,57 +292,7 @@ var _ = Describe("azure credentials", func() {
 				},
 				Key: "storageKey",
 			},
-			StorageSasToken: nil,
 		}
-		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
-	})
-
-	It("is correct when the sas token is used", func() {
-		azureCredentials := AzureCredentials{
-			StorageAccount: &machineryapi.SecretKeySelector{
-				LocalObjectReference: machineryapi.LocalObjectReference{
-					Name: "azure-config",
-				},
-				Key: "storageAccount",
-			},
-			StorageKey: nil,
-			StorageSasToken: &machineryapi.SecretKeySelector{
-				LocalObjectReference: machineryapi.LocalObjectReference{
-					Name: "azure-config",
-				},
-				Key: "sasToken",
-			},
-		}
-		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
-	})
-
-	It("is correct even if only the connection string is specified", func() {
-		azureCredentials := AzureCredentials{
-			ConnectionString: &machineryapi.SecretKeySelector{
-				LocalObjectReference: machineryapi.LocalObjectReference{
-					Name: "azure-config",
-				},
-				Key: "connectionString",
-			},
-		}
-		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
-	})
-
-	It("it is not correct when the connection string is specified with other parameters", func() {
-		azureCredentials := AzureCredentials{
-			ConnectionString: &machineryapi.SecretKeySelector{
-				LocalObjectReference: machineryapi.LocalObjectReference{
-					Name: "azure-config",
-				},
-				Key: "connectionString",
-			},
-			StorageAccount: &machineryapi.SecretKeySelector{
-				LocalObjectReference: machineryapi.LocalObjectReference{
-					Name: "azure-config",
-				},
-				Key: "storageAccount",
-			},
-		}
-		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
 	})
 })
