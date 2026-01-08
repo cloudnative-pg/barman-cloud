@@ -90,18 +90,30 @@ func appendCloudProviderOptions(
 			"--cloud-provider",
 			"azure-blob-storage")
 
+		// deprecated, to be removed in future versions
 		if useDefaultAzureCredentials(ctx) {
+			options = append(
+				options,
+				"--credential",
+				"default")
 			break
 		}
 
-		if !credentials.Azure.InheritFromAzureAD {
+		if credentials.Azure.UseDefaultAzureCredentials {
+			options = append(
+				options,
+				"--credential",
+				"default")
 			break
 		}
 
-		options = append(
-			options,
-			"--credential",
-			"managed-identity")
+		if credentials.Azure.InheritFromAzureAD {
+			options = append(
+				options,
+				"--credential",
+				"managed-identity")
+			break
+		}
 	case credentials.Google != nil:
 		options = append(
 			options,
@@ -129,8 +141,10 @@ func useDefaultAzureCredentials(ctx context.Context) bool {
 	return result
 }
 
-// ContextWithDefaultAzureCredentials create a context that contains the contextKeyUseDefaultAzureCredentials flag.
+// ContextWithDefaultAzureCredentials creates a context that contains the contextKeyUseDefaultAzureCredentials flag.
 // When set to true barman-cloud will use the default Azure credentials.
+//
+// Deprecated: Use AzureCredentials.UseDefaultAzureCredentials instead.
 func ContextWithDefaultAzureCredentials(ctx context.Context, enabled bool) context.Context {
 	return context.WithValue(ctx, contextKeyUseDefaultAzureCredentials, enabled)
 }

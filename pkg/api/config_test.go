@@ -295,4 +295,45 @@ var _ = Describe("azure credentials", func() {
 		}
 		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
 	})
+
+	It("is correct when using default azure credentials", func() {
+		azureCredentials := AzureCredentials{
+			UseDefaultAzureCredentials: true,
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).To(BeEmpty())
+	})
+
+	It("is not correct when multiple credential types are specified including default", func() {
+		azureCredentials := AzureCredentials{
+			UseDefaultAzureCredentials: true,
+			InheritFromAzureAD:         true,
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+	})
+
+	It("is not correct when default credentials and storage key are specified", func() {
+		azureCredentials := AzureCredentials{
+			UseDefaultAzureCredentials: true,
+			StorageKey: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "storageKey",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+	})
+
+	It("is not correct when default credentials and connection string are specified", func() {
+		azureCredentials := AzureCredentials{
+			UseDefaultAzureCredentials: true,
+			ConnectionString: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{
+					Name: "azure-config",
+				},
+				Key: "connectionString",
+			},
+		}
+		Expect(azureCredentials.ValidateAzureCredentials(path)).ToNot(BeEmpty())
+	})
 })
