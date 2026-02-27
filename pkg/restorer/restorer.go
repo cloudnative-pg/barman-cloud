@@ -161,17 +161,37 @@ func (restorer *WALRestorer) RestoreList(
 		go func(walIndex int) {
 			result := &resultList[walIndex]
 			result.WalName = fetchList[walIndex]
+
+			// Determine where to download the file
+			var downloadPath string
 			if walIndex == 0 {
 				// The WAL that PostgreSQL requested will go directly
-				// to the destination path
+				// to the destination path (no staging needed)
+				downloadPath = destinationPath
 				result.DestinationPath = destinationPath
 			} else {
+				// Prefetched WALs go to a temp file first to avoid race conditions
+				// where MoveOut could read a partially-written file
+				downloadPath = restorer.spool.TempFileName(result.WalName)
 				result.DestinationPath = restorer.spool.FileName(result.WalName)
 			}
 
 			result.StartTime = time.Now()
-			result.Err = restorer.Restore(fetchList[walIndex], result.DestinationPath, options)
+			result.Err = restorer.Restore(fetchList[walIndex], downloadPath, options)
 			result.EndTime = time.Now()
+
+			// For prefetched WALs, commit the temp file to make it visible,
+			// or clean up on failure
+			if walIndex != 0 {
+				if result.Err == nil {
+					if commitErr := restorer.spool.Commit(result.WalName); commitErr != nil {
+						result.Err = commitErr
+					}
+				} else {
+					// Clean up failed temp file
+					restorer.spool.CleanupTemp(result.WalName)
+				}
+			}
 
 			elapsedWalTime := result.EndTime.Sub(result.StartTime)
 			if result.Err == nil {
