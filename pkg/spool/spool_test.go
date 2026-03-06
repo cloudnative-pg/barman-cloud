@@ -93,4 +93,108 @@ var _ = Describe("Spool", func() {
 		const walFile = "000000020000068A00000004"
 		Expect(spool.FileName(walFile)).To(Equal(path.Join(tmpDir, walFile)))
 	})
+
+	It("returns temp file path with .tmp suffix", func() {
+		const walFile = "000000020000068A00000005"
+		tempPath := spool.TempFileName(walFile)
+		Expect(tempPath).To(Equal(path.Join(tmpDir, walFile+".tmp")))
+	})
+
+	It("commits a temp file to its final location", func() {
+		const walFile = "000000020000068A00000006"
+
+		// Create a temp file with some content
+		tempPath := spool.TempFileName(walFile)
+		err := os.WriteFile(tempPath, []byte("test content"), 0o600)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Temp file exists, final file does not
+		Expect(fileutils.FileExists(tempPath)).To(BeTrue())
+		Expect(spool.Contains(walFile)).To(BeFalse())
+
+		// Commit the file
+		err = spool.Commit(walFile)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Now final file exists, temp file does not
+		Expect(spool.Contains(walFile)).To(BeTrue())
+		tempExists, _ := fileutils.FileExists(tempPath)
+		Expect(tempExists).To(BeFalse())
+
+		// Verify content was preserved
+		content, err := os.ReadFile(spool.FileName(walFile))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(string(content)).To(Equal("test content"))
+	})
+
+	It("returns error when committing non-existent temp file", func() {
+		const walFile = "000000020000068A00000007"
+
+		err := spool.Commit(walFile)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("failed to commit WAL file"))
+	})
+
+	It("cleans up temp files", func() {
+		const walFile = "000000020000068A00000008"
+
+		// Create a temp file
+		tempPath := spool.TempFileName(walFile)
+		err := os.WriteFile(tempPath, []byte("test content"), 0o600)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(fileutils.FileExists(tempPath)).To(BeTrue())
+
+		// Clean it up
+		spool.CleanupTemp(walFile)
+
+		// Temp file should be gone
+		tempExists, _ := fileutils.FileExists(tempPath)
+		Expect(tempExists).To(BeFalse())
+	})
+
+	It("cleanup is safe on non-existent temp file", func() {
+		const walFile = "000000020000068A00000009"
+
+		// This should not panic or error
+		spool.CleanupTemp(walFile)
+	})
+
+	// These two tests verify the race condition fix:
+	// temp files (.tmp) must be invisible to Contains and MoveOut
+
+	It("Contains does NOT see temp files", func() {
+		const walFile = "000000020000068A0000000A"
+
+		// Create a temp file (simulating an in-progress download)
+		tempPath := spool.TempFileName(walFile)
+		err := os.WriteFile(tempPath, []byte("partial content"), 0o600)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Contains should return false - temp files are invisible
+		Expect(spool.Contains(walFile)).To(BeFalse())
+
+		// Clean up
+		spool.CleanupTemp(walFile)
+	})
+
+	It("MoveOut does NOT see temp files", func() {
+		const walFile = "000000020000068A0000000B"
+
+		// Create a temp file (simulating an in-progress download)
+		tempPath := spool.TempFileName(walFile)
+		err := os.WriteFile(tempPath, []byte("partial content"), 0o600)
+		Expect(err).ToNot(HaveOccurred())
+
+		// MoveOut should fail with ErrorNonExistentFile - temp files are invisible
+		destinationPath := path.Join(tmpDir2, "testFile")
+		err = spool.MoveOut(walFile, destinationPath)
+		Expect(err).To(Equal(ErrorNonExistentFile))
+
+		// Destination should not exist
+		destExists, _ := fileutils.FileExists(destinationPath)
+		Expect(destExists).To(BeFalse())
+
+		// Clean up
+		spool.CleanupTemp(walFile)
+	})
 })
