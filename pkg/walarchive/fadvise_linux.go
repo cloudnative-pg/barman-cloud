@@ -45,7 +45,7 @@ func (archiver *BarmanArchiver) fadviseNotUsed(fileName string) (err error) {
 		}
 	}(file)
 
-	fd := int(file.Fd())
+	fd := int(file.Fd()) //nolint:gosec // file descriptors always fit in int
 	if fadviseErr := unix.Fadvise(fd, 0, 0, unix.FADV_DONTNEED); fadviseErr != nil {
 		return fmt.Errorf("error issuing fadvise on file %s: %w", fileName, fadviseErr)
 	}
