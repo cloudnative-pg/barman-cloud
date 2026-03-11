@@ -31,6 +31,12 @@ import (
 // on a file which doesn't exist
 var ErrorNonExistentFile = fs.ErrNotExist
 
+const (
+	// tempSuffix is appended to files that are being downloaded.
+	// Files with this suffix are not yet complete and should not be moved.
+	tempSuffix = ".tmp"
+)
+
 // WALSpool is a way to keep track of which WAL files were processes from the parallel
 // feature and not by PostgreSQL request.
 // It works using a directory, under which we create an empty file carrying the name
@@ -100,4 +106,33 @@ func (spool *WALSpool) MoveOut(walName, destination string) (err error) {
 // FileName gets the name of the file for the given WAL inside the spool
 func (spool *WALSpool) FileName(walName string) string {
 	return path.Join(spool.spoolDirectory, walName)
+}
+
+// TempFileName gets the temporary file path for a WAL being downloaded.
+// Files should be written here first, then committed with Commit() to
+// ensure atomic visibility to MoveOut and Contains.
+func (spool *WALSpool) TempFileName(walName string) string {
+	return path.Join(spool.spoolDirectory, walName+tempSuffix)
+}
+
+// Commit atomically moves a completed download from its temp path to the final path.
+// This should be called after a successful download to make the file visible to MoveOut.
+// The rename is atomic on POSIX systems when both paths are on the same filesystem.
+func (spool *WALSpool) Commit(walName string) error {
+	tempPath := path.Join(spool.spoolDirectory, walName+tempSuffix)
+	finalPath := path.Join(spool.spoolDirectory, walName)
+
+	if err := os.Rename(tempPath, finalPath); err != nil {
+		// Clean up the temp file on failure
+		_ = os.Remove(tempPath)
+		return fmt.Errorf("failed to commit WAL file %s: %w", walName, err)
+	}
+	return nil
+}
+
+// CleanupTemp removes a temporary file if it exists.
+// This should be called when a download fails to avoid leaving partial files.
+func (spool *WALSpool) CleanupTemp(walName string) {
+	tempPath := path.Join(spool.spoolDirectory, walName+tempSuffix)
+	_ = os.Remove(tempPath)
 }
