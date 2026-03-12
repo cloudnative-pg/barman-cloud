@@ -118,7 +118,11 @@ func envSetCloudCredentials(
 		return envSetGoogleCredentials(ctx, c, namespace, configuration.Google, env)
 	}
 
-	return envSetAzureCredentials(ctx, c, namespace, configuration, env)
+	if configuration.Azure != nil {
+		return envSetAzureCredentials(ctx, c, namespace, configuration, env)
+	}
+
+	return nil, fmt.Errorf("ObjectStoreConfiguration invalid: no credentials defined")
 }
 
 // envSetAWSCredentials sets the AWS environment variables given the configuration
