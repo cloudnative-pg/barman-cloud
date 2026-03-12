@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.5.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.4.0...v0.5.0) (2026-03-12)
+
+
+### Features
+
+* Add DefaultAzureCredential authentication support ([#174](https://github.com/cloudnative-pg/barman-cloud/issues/174)) ([ced266c](https://github.com/cloudnative-pg/barman-cloud/commit/ced266c145f54624b17a0568670fc77f0722203d))
+
+
+### Bug Fixes
+
+* **azure:** require storage account for explicit credentials ([#177](https://github.com/cloudnative-pg/barman-cloud/issues/177)) ([20b7e0e](https://github.com/cloudnative-pg/barman-cloud/commit/20b7e0e10b0f6e75828e13b89f92cf7810c4d21e))
+* **deps:** update all non-major go dependencies ([#182](https://github.com/cloudnative-pg/barman-cloud/issues/182)) ([157c585](https://github.com/cloudnative-pg/barman-cloud/commit/157c5851eb558df620f8ed73cb251aca83f10f2f))
+* **deps:** update kubernetes packages to v0.35.2 ([#193](https://github.com/cloudnative-pg/barman-cloud/issues/193)) ([d949a07](https://github.com/cloudnative-pg/barman-cloud/commit/d949a07679adca655ee9a5775b11aeae7cd9aeff))
+* **deps:** update module github.com/cloudnative-pg/machinery to v0.3.3 ([#178](https://github.com/cloudnative-pg/barman-cloud/issues/178)) ([1030369](https://github.com/cloudnative-pg/barman-cloud/commit/1030369f3b81b97116cb0e3e910562833f3180e5))
+* **deps:** update module golang.org/x/sys to v0.41.0 ([#190](https://github.com/cloudnative-pg/barman-cloud/issues/190)) ([45445d4](https://github.com/cloudnative-pg/barman-cloud/commit/45445d4339f63fc40cc2eb1901f0f195e9ca86d9))
+* **deps:** update module golang.org/x/sys to v0.42.0 ([#201](https://github.com/cloudnative-pg/barman-cloud/issues/201)) ([d2d6e03](https://github.com/cloudnative-pg/barman-cloud/commit/d2d6e03f4293b5e3e0c8c54d04250c52a9e209f4))
+* **deps:** update module sigs.k8s.io/controller-runtime to v0.23.1 ([#187](https://github.com/cloudnative-pg/barman-cloud/issues/187)) ([15cac4a](https://github.com/cloudnative-pg/barman-cloud/commit/15cac4ac53f07dba8dab5feaff1e034dbbfbc6cb))
+* **deps:** update module sigs.k8s.io/controller-runtime to v0.23.3 ([#200](https://github.com/cloudnative-pg/barman-cloud/issues/200)) ([fddea0b](https://github.com/cloudnative-pg/barman-cloud/commit/fddea0b7f46c6978733d6e3a916a5da7161d2c39))
+* misleading message about Azure if no ObjectStore credentials defined ([#188](https://github.com/cloudnative-pg/barman-cloud/issues/188)) ([6e3e20f](https://github.com/cloudnative-pg/barman-cloud/commit/6e3e20fe5bb1b87fcf85b07bf134c0871a2983ec))
+* use atomic writes for parallel WAL restore spool ([#198](https://github.com/cloudnative-pg/barman-cloud/issues/198)) ([e89e4ac](https://github.com/cloudnative-pg/barman-cloud/commit/e89e4ac1f22fd853923a1f90f5e7ac9adb024ad7))
+
 ## [0.4.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.3.3...v0.4.0) (2025-12-24)
 
 
