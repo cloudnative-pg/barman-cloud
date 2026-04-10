@@ -20,6 +20,7 @@ package archiver
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/cloudnative-pg/machinery/pkg/log"
@@ -131,13 +132,45 @@ func (archiver *WALArchiver) CheckWalArchiveDestination(ctx context.Context, opt
 	return archiver.barmanArchiver.CheckWalArchiveDestination(ctx, options)
 }
 
-// BarmanCloudCheckWalArchiveOptions create the options needed for the `barman-cloud-check-wal-archive`
-// command.
+// CheckWalArchiveOpts holds optional parameters for
+// BarmanCloudCheckWalArchiveOptions.
+type CheckWalArchiveOpts struct {
+	// Timeline, when > 0, is passed as --timeline to
+	// barman-cloud-check-wal-archive so that WAL segments from earlier
+	// timelines (expected after a failover/promotion) do not trigger the
+	// "Expected empty archive" safety check.
+	Timeline int
+}
+
+// CheckWalArchiveOption is a functional option for
+// BarmanCloudCheckWalArchiveOptions.
+type CheckWalArchiveOption func(*CheckWalArchiveOpts)
+
+// WithTimeline returns a CheckWalArchiveOption that passes --timeline to
+// barman-cloud-check-wal-archive. The value should be the server's current
+// PostgreSQL timeline, so that WAL from earlier timelines in the archive
+// is treated as expected (e.g. after a failover) rather than as an error.
+func WithTimeline(tl int) CheckWalArchiveOption {
+	return func(o *CheckWalArchiveOpts) { o.Timeline = tl }
+}
+
+// BarmanCloudCheckWalArchiveOptions creates the options needed for the
+// `barman-cloud-check-wal-archive` command.
+//
+// Callers may pass functional options such as WithTimeline to customise
+// the command arguments. Existing callers that pass no options continue
+// to work unchanged.
 func (archiver *WALArchiver) BarmanCloudCheckWalArchiveOptions(
 	ctx context.Context,
 	configuration *api.BarmanObjectStoreConfiguration,
 	clusterName string,
+	opts ...CheckWalArchiveOption,
 ) ([]string, error) {
+	var cfg CheckWalArchiveOpts
+	for _, o := range opts {
+		o(&cfg)
+	}
+
 	var options []string
 	if len(configuration.EndpointURL) > 0 {
 		options = append(
@@ -149,6 +182,10 @@ func (archiver *WALArchiver) BarmanCloudCheckWalArchiveOptions(
 	options, err := command.AppendCloudProviderOptionsFromConfiguration(ctx, options, configuration)
 	if err != nil {
 		return nil, err
+	}
+
+	if cfg.Timeline > 0 {
+		options = append(options, "--timeline", strconv.Itoa(cfg.Timeline))
 	}
 
 	serverName := clusterName

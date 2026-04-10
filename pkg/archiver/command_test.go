@@ -26,6 +26,73 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var _ = Describe("barmanCloudCheckWalArchiveOptions", func() {
+	var config *barmanApi.BarmanObjectStoreConfiguration
+	var tempDir string
+	var tempEmptyWalArchivePath string
+
+	BeforeEach(func() {
+		config = &barmanApi.BarmanObjectStoreConfiguration{
+			DestinationPath: "s3://bucket-name/",
+			EndpointURL:     "https://s3.example.com",
+		}
+		var err error
+		tempDir, err = os.MkdirTemp(os.TempDir(), "check_command_test")
+		Expect(err).ToNot(HaveOccurred())
+		file, err := os.CreateTemp(tempDir, "empty-wal-archive-path")
+		Expect(err).ToNot(HaveOccurred())
+		tempEmptyWalArchivePath = file.Name()
+	})
+	AfterEach(func() {
+		err := os.RemoveAll(tempDir)
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("should generate correct arguments without timeline", func(ctx SpecContext) {
+		archiver, err := New(ctx, nil, "spool", "pgdata", tempEmptyWalArchivePath)
+		Expect(err).ToNot(HaveOccurred())
+
+		options, err := archiver.BarmanCloudCheckWalArchiveOptions(ctx, config, "test-cluster")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(strings.Join(options, " ")).
+			To(Equal("--endpoint-url https://s3.example.com s3://bucket-name/ test-cluster"))
+	})
+
+	It("should include --timeline when WithTimeline is passed", func(ctx SpecContext) {
+		archiver, err := New(ctx, nil, "spool", "pgdata", tempEmptyWalArchivePath)
+		Expect(err).ToNot(HaveOccurred())
+
+		options, err := archiver.BarmanCloudCheckWalArchiveOptions(
+			ctx, config, "test-cluster", WithTimeline(2))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(strings.Join(options, " ")).
+			To(Equal("--endpoint-url https://s3.example.com --timeline 2 s3://bucket-name/ test-cluster"))
+	})
+
+	It("should not include --timeline when timeline is zero", func(ctx SpecContext) {
+		archiver, err := New(ctx, nil, "spool", "pgdata", tempEmptyWalArchivePath)
+		Expect(err).ToNot(HaveOccurred())
+
+		options, err := archiver.BarmanCloudCheckWalArchiveOptions(
+			ctx, config, "test-cluster", WithTimeline(0))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(strings.Join(options, " ")).
+			To(Equal("--endpoint-url https://s3.example.com s3://bucket-name/ test-cluster"))
+	})
+
+	It("should use serverName when configured", func(ctx SpecContext) {
+		archiver, err := New(ctx, nil, "spool", "pgdata", tempEmptyWalArchivePath)
+		Expect(err).ToNot(HaveOccurred())
+
+		config.ServerName = "custom-server"
+		options, err := archiver.BarmanCloudCheckWalArchiveOptions(
+			ctx, config, "test-cluster", WithTimeline(3))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(strings.Join(options, " ")).
+			To(Equal("--endpoint-url https://s3.example.com --timeline 3 s3://bucket-name/ custom-server"))
+	})
+})
+
 var _ = Describe("barmanCloudWalArchiveOptions", func() {
 	var config *barmanApi.BarmanObjectStoreConfiguration
 	var tempDir string
