@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.1](https://github.com/cloudnative-pg/barman-cloud/compare/v0.5.0...v0.5.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* allow lz4 compression for base backups ([#216](https://github.com/cloudnative-pg/barman-cloud/issues/216)) ([a3527b4](https://github.com/cloudnative-pg/barman-cloud/commit/a3527b40e57ccca281fe4844790bf300bf4429d9)), closes [#215](https://github.com/cloudnative-pg/barman-cloud/issues/215)
+* **deps:** update all non-major go dependencies ([#211](https://github.com/cloudnative-pg/barman-cloud/issues/211)) ([5fef32a](https://github.com/cloudnative-pg/barman-cloud/commit/5fef32a9515094ac9a09ec143817977a18823cd1))
+* **deps:** update kubernetes monorepo to v0.35.4 ([#206](https://github.com/cloudnative-pg/barman-cloud/issues/206)) ([ef2ec36](https://github.com/cloudnative-pg/barman-cloud/commit/ef2ec3672076b2a03688506ef7f51de2031407c5))
+
 ## [0.5.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.4.0...v0.5.0) (2026-03-12)
 
 
