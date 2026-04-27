@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/cloudnative-pg/barman-cloud/compare/v0.5.1...v0.5.2) (2026-04-27)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/onsi/ginkgo/v2 to v2.28.2 ([#219](https://github.com/cloudnative-pg/barman-cloud/issues/219)) ([c400a2e](https://github.com/cloudnative-pg/barman-cloud/commit/c400a2ebc4edc0965824852021f70b49f69f76e0))
+
 ## [0.5.1](https://github.com/cloudnative-pg/barman-cloud/compare/v0.5.0...v0.5.1) (2026-04-21)
 
 
