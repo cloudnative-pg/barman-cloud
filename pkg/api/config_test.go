@@ -49,6 +49,28 @@ var _ = Describe("DataBackupConfiguration.AppendAdditionalCommandArgs", func() {
 	})
 })
 
+var _ = Describe("DataBackupConfiguration.AppendRestoreAdditionalCommandArgs", func() {
+	var options []string
+	var config DataBackupConfiguration
+	BeforeEach(func() {
+		options = []string{"--option1", "--option2"}
+		config = DataBackupConfiguration{
+			RestoreAdditionalCommandArgs: []string{"--option3", "--option4"},
+		}
+	})
+
+	It("should append additional command args to the options", func() {
+		updatedOptions := config.AppendRestoreAdditionalCommandArgs(options)
+		Expect(updatedOptions).To(Equal([]string{"--option1", "--option2", "--option3", "--option4"}))
+	})
+
+	It("should return the original options if there are no additional command args", func() {
+		config.RestoreAdditionalCommandArgs = nil
+		updatedOptions := config.AppendRestoreAdditionalCommandArgs(options)
+		Expect(updatedOptions).To(Equal(options))
+	})
+})
+
 var _ = Describe("WalBackupConfiguration.AppendArchiveAdditionalCommandArgs", func() {
 	var options []string
 	var config WalBackupConfiguration
