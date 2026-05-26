@@ -61,7 +61,8 @@ func executeQueryCommand(
 	barmanCommand string,
 	barmanConfiguration *barmanApi.BarmanObjectStoreConfiguration,
 	serverName string,
-	additionalOptions []string,
+	additionalFlagArgs []string,
+	trailingArgs []string,
 	env []string,
 ) (string, error) {
 	contextLogger := log.FromContext(ctx).WithName("barman")
@@ -77,8 +78,14 @@ func executeQueryCommand(
 		return "", err
 	}
 
+	// User-provided per-subcommand flags are appended after the standard
+	// options (cloud provider, endpoint, etc.) but before the positional
+	// arguments, matching the shape of the other Append*AdditionalCommandArgs
+	// helpers in the rest of this library.
+	options = append(options, additionalFlagArgs...)
+
 	options = append(options, barmanConfiguration.DestinationPath, serverName)
-	options = append(options, additionalOptions...)
+	options = append(options, trailingArgs...)
 
 	var stdoutBuffer bytes.Buffer
 	var stderrBuffer bytes.Buffer
@@ -114,6 +121,7 @@ func GetBackupList(
 		utils.BarmanCloudBackupList,
 		barmanConfiguration,
 		serverName,
+		barmanConfiguration.Data.AppendListAdditionalCommandArgs(nil),
 		[]string{},
 		env,
 	)
@@ -146,6 +154,7 @@ func GetBackupByName(
 		utils.BarmanCloudBackupShow,
 		barmanConfiguration,
 		serverName,
+		barmanConfiguration.Data.AppendShowAdditionalCommandArgs(nil),
 		[]string{backupName},
 		env,
 	)
