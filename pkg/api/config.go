@@ -325,6 +325,23 @@ type DataBackupConfiguration struct {
 	// behavior during execution.
 	// +optional
 	AdditionalCommandArgs []string `json:"additionalCommandArgs,omitempty"`
+
+	// Additional arguments that can be appended to the 'barman-cloud-restore'
+	// command-line invocation. These arguments provide flexibility to customize
+	// the data restore process further, according to specific requirements or
+	// configurations.
+	//
+	// Example:
+	// In a scenario where specialized restore options are required, such as setting
+	// a specific read timeout or defining custom behavior, users can use this field
+	// to specify additional command arguments.
+	//
+	// Note:
+	// It's essential to ensure that the provided arguments are valid and supported
+	// by the 'barman-cloud-restore' command, to avoid potential errors or unintended
+	// behavior during execution.
+	// +optional
+	RestoreAdditionalCommandArgs []string `json:"restoreAdditionalCommandArgs,omitempty"`
 }
 
 // ArePopulated checks if the passed set of credentials contains
@@ -464,6 +481,14 @@ func (cfg *DataBackupConfiguration) AppendAdditionalCommandArgs(options []string
 		return options
 	}
 	return appendAdditionalCommandArgs(cfg.AdditionalCommandArgs, options)
+}
+
+// AppendRestoreAdditionalCommandArgs adds custom arguments as barman-cloud-restore command-line options
+func (cfg *DataBackupConfiguration) AppendRestoreAdditionalCommandArgs(options []string) []string {
+	if cfg == nil || len(cfg.RestoreAdditionalCommandArgs) == 0 {
+		return options
+	}
+	return appendAdditionalCommandArgs(cfg.RestoreAdditionalCommandArgs, options)
 }
 
 // AppendArchiveAdditionalCommandArgs adds custom arguments as barman-cloud-wal-archive command-line options
