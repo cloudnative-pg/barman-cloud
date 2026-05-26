@@ -325,6 +325,33 @@ type DataBackupConfiguration struct {
 	// behavior during execution.
 	// +optional
 	AdditionalCommandArgs []string `json:"additionalCommandArgs,omitempty"`
+
+	// ShowAdditionalCommandArgs represents additional arguments that can be appended
+	// to the 'barman-cloud-backup-show' command-line invocation. This command is
+	// used after a successful upload to verify and record metadata about the
+	// freshly-written backup, so flags relevant to the underlying S3 client
+	// (e.g. `--addressing-style=virtual` for strictly virtual-hosted S3-compatible
+	// endpoints) generally belong here as well.
+	//
+	// Note:
+	// It's essential to ensure that the provided arguments are valid and supported
+	// by the 'barman-cloud-backup-show' command, to avoid potential errors or
+	// unintended behavior during execution.
+	// +optional
+	ShowAdditionalCommandArgs []string `json:"showAdditionalCommandArgs,omitempty"`
+
+	// ListAdditionalCommandArgs represents additional arguments that can be appended
+	// to the 'barman-cloud-backup-list' command-line invocation. This command is
+	// used internally for retention-policy enforcement; flags relevant to the
+	// underlying S3 client (e.g. `--addressing-style=virtual` for strictly
+	// virtual-hosted S3-compatible endpoints) generally belong here as well.
+	//
+	// Note:
+	// It's essential to ensure that the provided arguments are valid and supported
+	// by the 'barman-cloud-backup-list' command, to avoid potential errors or
+	// unintended behavior during execution.
+	// +optional
+	ListAdditionalCommandArgs []string `json:"listAdditionalCommandArgs,omitempty"`
 }
 
 // ArePopulated checks if the passed set of credentials contains
@@ -464,6 +491,24 @@ func (cfg *DataBackupConfiguration) AppendAdditionalCommandArgs(options []string
 		return options
 	}
 	return appendAdditionalCommandArgs(cfg.AdditionalCommandArgs, options)
+}
+
+// AppendShowAdditionalCommandArgs adds custom arguments as barman-cloud-backup-show
+// command-line options
+func (cfg *DataBackupConfiguration) AppendShowAdditionalCommandArgs(options []string) []string {
+	if cfg == nil || len(cfg.ShowAdditionalCommandArgs) == 0 {
+		return options
+	}
+	return appendAdditionalCommandArgs(cfg.ShowAdditionalCommandArgs, options)
+}
+
+// AppendListAdditionalCommandArgs adds custom arguments as barman-cloud-backup-list
+// command-line options
+func (cfg *DataBackupConfiguration) AppendListAdditionalCommandArgs(options []string) []string {
+	if cfg == nil || len(cfg.ListAdditionalCommandArgs) == 0 {
+		return options
+	}
+	return appendAdditionalCommandArgs(cfg.ListAdditionalCommandArgs, options)
 }
 
 // AppendArchiveAdditionalCommandArgs adds custom arguments as barman-cloud-wal-archive command-line options
