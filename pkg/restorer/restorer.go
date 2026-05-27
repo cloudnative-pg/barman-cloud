@@ -42,6 +42,21 @@ const (
 // ErrWALNotFound is returned when the WAL is not found in the cloud archive
 var ErrWALNotFound = errors.New("WAL not found")
 
+// ErrConnectivity is returned when barman-cloud-wal-restore fails due to a
+// connectivity issue with the object storage
+var ErrConnectivity = errors.New("connectivity failure")
+
+// ErrInvalidWalName is returned when the WAL name is not valid
+var ErrInvalidWalName = errors.New("invalid WAL name")
+
+// ErrGeneric is returned when barman-cloud-wal-restore fails with a generic
+// error
+var ErrGeneric = errors.New("generic error")
+
+// ErrUnrecognizedExitCode is returned when barman-cloud-wal-restore exits with
+// an unrecognized exit code
+var ErrUnrecognizedExitCode = errors.New("unrecognized exit code")
+
 // WALRestorer is a structure containing every info needed to restore
 // some WALs from the object storage
 type WALRestorer struct {
@@ -280,16 +295,17 @@ func (restorer *WALRestorer) Restore(
 	case exitCodeBucketOrWalNotFound:
 		return fmt.Errorf("object storage or file not found %s: %w", walName, ErrWALNotFound)
 	case exitCodeConnectivityError:
-		return fmt.Errorf("connectivity failure while executing %s, retrying",
-			utils.BarmanCloudWalRestore)
+		return fmt.Errorf("connectivity failure while executing %s, retrying: %w",
+			utils.BarmanCloudWalRestore, ErrConnectivity)
 	case exitCodeInvalidWalName:
-		return fmt.Errorf("invalid name for a WAL file: %s", walName)
+		return fmt.Errorf("invalid name for a WAL file %q: %w", walName, ErrInvalidWalName)
 	case exitCodeGeneric:
-		return fmt.Errorf("generic error code encountered while executing %s",
-			utils.BarmanCloudWalRestore)
+		return fmt.Errorf("generic error code encountered while executing %s: %w",
+			utils.BarmanCloudWalRestore, ErrGeneric)
 	default:
-		return fmt.Errorf("encountered an unrecognized exit code error: '%d' while executing %s",
+		return fmt.Errorf("encountered an unrecognized exit code error: '%d' while executing %s: %w",
 			exitCode,
-			utils.BarmanCloudWalRestore)
+			utils.BarmanCloudWalRestore,
+			ErrUnrecognizedExitCode)
 	}
 }
