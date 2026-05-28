@@ -46,8 +46,8 @@ var ErrWALNotFound = errors.New("WAL not found")
 // connectivity issue with the object storage
 var ErrConnectivity = errors.New("connectivity failure")
 
-// ErrInvalidWalName is returned when the WAL name is not valid
-var ErrInvalidWalName = errors.New("invalid WAL name")
+// ErrInvalidWALName is returned when the WAL name is not valid
+var ErrInvalidWALName = errors.New("invalid WAL name")
 
 // ErrGeneric is returned when barman-cloud-wal-restore fails with a generic
 // error
@@ -298,7 +298,7 @@ func (restorer *WALRestorer) Restore(
 		return fmt.Errorf("connectivity failure while executing %s, retrying: %w",
 			utils.BarmanCloudWalRestore, ErrConnectivity)
 	case exitCodeInvalidWalName:
-		return fmt.Errorf("invalid name for a WAL file %q: %w", walName, ErrInvalidWalName)
+		return fmt.Errorf("invalid name for a WAL file %q: %w", walName, ErrInvalidWALName)
 	case exitCodeGeneric:
 		return fmt.Errorf("generic error code encountered while executing %s: %w",
 			utils.BarmanCloudWalRestore, ErrGeneric)
