@@ -21,6 +21,7 @@ package restorer
 
 import (
 	"errors"
+	"fmt"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -58,7 +59,7 @@ var _ = Describe("errorForExitCode", func() {
 		// error with additional context. errors.Is must still resolve the
 		// original sentinel through any number of wraps.
 		base := errorForExitCode(2, walName)
-		outer := errors.Join(errors.New("outer context"), base)
+		outer := fmt.Errorf("outer context: %w", base)
 		Expect(errors.Is(outer, ErrConnectivity)).To(BeTrue())
 	})
 })
