@@ -95,4 +95,55 @@ var _ = Describe("barmanCloudWalArchiveOptions", func() {
 						"-vv --immediate-checkpoint=false s3://bucket-name/ test-cluster",
 				))
 	})
+
+	It("should append the endpoint URL when set", func(ctx SpecContext) {
+		config.EndpointURL = "https://my-endpoint.example.com"
+
+		archiver, err := New(ctx, nil, "spool", "pgdata", tempEmptyWalArchivePath)
+		Expect(err).ToNot(HaveOccurred())
+
+		options, err := archiver.BarmanCloudWalArchiveOptions(ctx, config, "test-cluster")
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(strings.Join(options, " ")).
+			To(
+				Equal(
+					"--gzip -e aes256 --endpoint-url https://my-endpoint.example.com " +
+						"s3://bucket-name/ test-cluster",
+				))
+	})
+
+	It("should append tags/historyTags when set", func(ctx SpecContext) {
+		config.Tags = map[string]string{"tag": "foo"}
+		config.HistoryTags = map[string]string{"tag": "bar"}
+
+		archiver, err := New(ctx, nil, "spool", "pgdata", tempEmptyWalArchivePath)
+		Expect(err).ToNot(HaveOccurred())
+
+		options, err := archiver.BarmanCloudWalArchiveOptions(ctx, config, "test-cluster")
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(strings.Join(options, " ")).
+			To(
+				Equal(
+					"--gzip -e aes256 --tags tag,foo --history-tags tag,bar " +
+						"s3://bucket-name/ test-cluster",
+				))
+	})
+
+	It("should use the configured server name instead of the cluster name", func(ctx SpecContext) {
+		config.ServerName = "custom-server-name"
+
+		archiver, err := New(ctx, nil, "spool", "pgdata", tempEmptyWalArchivePath)
+		Expect(err).ToNot(HaveOccurred())
+
+		options, err := archiver.BarmanCloudWalArchiveOptions(ctx, config, "test-cluster")
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(strings.Join(options, " ")).
+			To(
+				Equal(
+					"--gzip -e aes256 s3://bucket-name/ custom-server-name",
+				))
+	})
 })
