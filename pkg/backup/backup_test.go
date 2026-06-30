@@ -67,8 +67,8 @@ var _ = Describe("GetBarmanCloudBackupOptions", func() {
 			"--min-chunk-size=5MB",
 			"--read-timeout=60",
 			"-vv",
-			"--encryption=aes256",
-			"--immediate-checkpoint=true",
+			"--encryption=aws:kms",
+			"--immediate-checkpoint=false",
 		}
 		backupCommand.configuration.Data.AdditionalCommandArgs = extraOptions
 
