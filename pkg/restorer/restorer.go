@@ -148,11 +148,8 @@ func (restorer *WALRestorer) SetEndOfWALStreamFromResults(results []Result) (mar
 		}
 
 		timeline, err := timelineFromWALName(result.WalName)
-		if errors.Is(err, ErrInvalidWALName) {
-			continue
-		}
 		if err != nil {
-			return false, err
+			continue
 		}
 		timelines[timeline] = struct{}{}
 	}
@@ -197,19 +194,16 @@ func (restorer *WALRestorer) IsEndOfWALStream() (bool, error) {
 // not consume markers.
 func (restorer *WALRestorer) ConsumeEndOfWALStreamForWAL(walName string) (markerConsumed bool, err error) {
 	timeline, err := timelineFromWALName(walName)
-	if errors.Is(err, ErrInvalidWALName) {
+	if err != nil {
 		return false, nil
 	}
-	if err != nil {
-		return false, err
-	}
 
-	containsLegacy, err := restorer.IsEndOfWALStream()
+	containsLegacy, err := restorer.isEndOfWALStream(endOfWALStreamFlagFilename)
 	if err != nil {
 		return false, err
 	}
 	if containsLegacy {
-		if err := restorer.ResetEndOfWalStream(); err != nil {
+		if err := restorer.resetEndOfWalStream(endOfWALStreamFlagFilename); err != nil {
 			return false, err
 		}
 	}
@@ -258,6 +252,9 @@ func endOfWALStreamFlagName(timeline uint32) string {
 	return fmt.Sprintf("%s%08X", endOfWALStreamFlagPrefix, timeline)
 }
 
+// timelineFromWALName extracts the timeline from a regular WAL segment file
+// name. It fails with ErrInvalidWALName for any other name (e.g. timeline
+// history or backup label files); no other error is possible.
 func timelineFromWALName(walName string) (uint32, error) {
 	subMatches := walSegmentRe.FindStringSubmatch(path.Base(walName))
 	if len(subMatches) != 4 {
