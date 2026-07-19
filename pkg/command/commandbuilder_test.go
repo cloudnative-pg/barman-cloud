@@ -26,6 +26,7 @@ import (
 	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -232,5 +233,47 @@ var _ = Describe("AppendCloudProviderOptionsFromConfiguration with S3 addressing
 		result, err := AppendCloudProviderOptionsFromConfiguration(ctx, nil, configuration)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result).To(Equal([]string{"--cloud-provider", "google-cloud-storage"}))
+	})
+})
+
+var _ = Describe("AppendCloudProviderOptions with AWS credentials", func() {
+	var options []string
+
+	BeforeEach(func() {
+		options = []string{}
+	})
+
+	It("should not add the SSE-C option when no customer key is set", func(ctx SpecContext) {
+		credentials := barmanApi.BarmanCredentials{
+			AWS: &barmanApi.S3Credentials{
+				InheritFromIAMRole: true,
+			},
+		}
+		result, err := appendCloudProviderOptions(ctx, options, credentials)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(Equal([]string{
+			"--cloud-provider", "aws-s3",
+		}))
+		Expect(result).ToNot(ContainElement("--sse-customer-key"))
+	})
+
+	It("should add the SSE-C option pointing at the key file when a customer key is set", func(ctx SpecContext) {
+		credentials := barmanApi.BarmanCredentials{
+			AWS: &barmanApi.S3Credentials{
+				InheritFromIAMRole: true,
+				SSECustomerKey: &machineryapi.SecretKeySelector{
+					LocalObjectReference: machineryapi.LocalObjectReference{
+						Name: "sse-c-key",
+					},
+					Key: "key",
+				},
+			},
+		}
+		result, err := appendCloudProviderOptions(ctx, options, credentials)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(Equal([]string{
+			"--cloud-provider", "aws-s3",
+			"--sse-customer-key", "file://" + utils.SSECustomerKeyFileLocation,
+		}))
 	})
 })
