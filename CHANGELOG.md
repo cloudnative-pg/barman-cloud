@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.6.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.5.1...v0.6.0) (2026-07-20)
+
+
+### Features
+
+* **api:** support additional command args for barman-cloud-restore ([#242](https://github.com/cloudnative-pg/barman-cloud/issues/242)) ([5c21c6a](https://github.com/cloudnative-pg/barman-cloud/commit/5c21c6adaa4b7091d7e54dd61a04709b726473a0))
+* **ip:** assign copyright to the Linux Foundation ([#218](https://github.com/cloudnative-pg/barman-cloud/issues/218)) ([0936320](https://github.com/cloudnative-pg/barman-cloud/commit/093632092abc8444baff225acff9d440f9c5f96b))
+* **restorer:** add sentinel errors for WAL restore failures ([#253](https://github.com/cloudnative-pg/barman-cloud/issues/253)) ([bb683bf](https://github.com/cloudnative-pg/barman-cloud/commit/bb683bf8d82a5d7928aec6b269b35bd626c92766))
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#222](https://github.com/cloudnative-pg/barman-cloud/issues/222)) ([467fdb6](https://github.com/cloudnative-pg/barman-cloud/commit/467fdb61cecea12d6580e271445e52e8adf744cb))
+* **deps:** update all non-major go dependencies ([#243](https://github.com/cloudnative-pg/barman-cloud/issues/243)) ([a90f9c2](https://github.com/cloudnative-pg/barman-cloud/commit/a90f9c2afe9b3076c6443cfc5344de800eaa81f9))
+* **deps:** update all non-major go dependencies ([#265](https://github.com/cloudnative-pg/barman-cloud/issues/265)) ([9f78a86](https://github.com/cloudnative-pg/barman-cloud/commit/9f78a86ae3d8886620604c1ab44cc7e42bee86f3))
+* **deps:** update all non-major go dependencies ([#271](https://github.com/cloudnative-pg/barman-cloud/issues/271)) ([f472096](https://github.com/cloudnative-pg/barman-cloud/commit/f47209630530c9de1ce1458130ebe9f3d5d53d8d))
+* **deps:** update all non-major go dependencies to v0.46.0 ([#262](https://github.com/cloudnative-pg/barman-cloud/issues/262)) ([bd68198](https://github.com/cloudnative-pg/barman-cloud/commit/bd68198c31dc516cec590a8bbac004f4f61b76c4))
+* **deps:** update k8s.io/utils digest to cf1189d ([#281](https://github.com/cloudnative-pg/barman-cloud/issues/281)) ([48400ef](https://github.com/cloudnative-pg/barman-cloud/commit/48400efa7b680f8503f18d4647c157cefc38b94b))
+* **deps:** update kubernetes monorepo to v0.36.1 ([#241](https://github.com/cloudnative-pg/barman-cloud/issues/241)) ([2c03f9f](https://github.com/cloudnative-pg/barman-cloud/commit/2c03f9f9613995e7addd4da2c6a3746492d409de))
+* **deps:** update kubernetes monorepo to v0.36.2 ([#264](https://github.com/cloudnative-pg/barman-cloud/issues/264)) ([19619e8](https://github.com/cloudnative-pg/barman-cloud/commit/19619e82178b9cf6e74953e36563575b763d63ea))
+* **deps:** update module github.com/cloudnative-pg/machinery to v0.5.0 ([#251](https://github.com/cloudnative-pg/barman-cloud/issues/251)) ([a858228](https://github.com/cloudnative-pg/barman-cloud/commit/a858228428cc12e0f028849f63e48c6702d201c9))
+* **deps:** update module github.com/onsi/ginkgo/v2 to v2.28.2 ([#219](https://github.com/cloudnative-pg/barman-cloud/issues/219)) ([c400a2e](https://github.com/cloudnative-pg/barman-cloud/commit/c400a2ebc4edc0965824852021f70b49f69f76e0))
+* **deps:** update module golang.org/x/sys to v0.44.0 ([#238](https://github.com/cloudnative-pg/barman-cloud/issues/238)) ([bac2182](https://github.com/cloudnative-pg/barman-cloud/commit/bac21829d96aca1d8dad986ad537ae7b2481ccd8))
+* **deps:** update module golang.org/x/sys to v0.45.0 ([#248](https://github.com/cloudnative-pg/barman-cloud/issues/248)) ([9ca5269](https://github.com/cloudnative-pg/barman-cloud/commit/9ca52695f4b3315c6b112bd9864dc11fa5f1bdbc))
+* **deps:** update module golang.org/x/sys to v0.47.0 ([#280](https://github.com/cloudnative-pg/barman-cloud/issues/280)) ([1776aa7](https://github.com/cloudnative-pg/barman-cloud/commit/1776aa74d88190bfc1bb1fdcc2d6c8ac5871295f))
+* **deps:** update module sigs.k8s.io/controller-runtime to v0.24.0 ([#223](https://github.com/cloudnative-pg/barman-cloud/issues/223)) ([fd4b0e6](https://github.com/cloudnative-pg/barman-cloud/commit/fd4b0e67da914be19e52935fd06cc3e4331ac31b))
+* **deps:** update module sigs.k8s.io/controller-runtime to v0.24.1 ([#240](https://github.com/cloudnative-pg/barman-cloud/issues/240)) ([7c37994](https://github.com/cloudnative-pg/barman-cloud/commit/7c379948eac3684fe4f0fc8a52dd89d9af594fd9))
+
 ## [0.5.1](https://github.com/cloudnative-pg/barman-cloud/compare/v0.5.0...v0.5.1) (2026-04-21)
 
 
