@@ -62,7 +62,16 @@ func AppendCloudProviderOptionsFromConfiguration(
 	options []string,
 	barmanConfiguration *barmanApi.BarmanObjectStoreConfiguration,
 ) ([]string, error) {
-	return appendCloudProviderOptions(ctx, options, barmanConfiguration.BarmanCredentials)
+	options, err := appendCloudProviderOptions(ctx, options, barmanConfiguration.BarmanCredentials)
+	if err != nil {
+		return nil, err
+	}
+
+	if barmanConfiguration.AWS != nil && barmanConfiguration.AddressingStyle != "" {
+		options = append(options, "--addressing-style", string(barmanConfiguration.AddressingStyle))
+	}
+
+	return options, nil
 }
 
 // AppendCloudProviderOptionsFromBackup takes an options array and adds the cloud provider specified

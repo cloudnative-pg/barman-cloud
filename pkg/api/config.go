@@ -165,6 +165,18 @@ type GoogleCredentials struct {
 	GKEEnvironment bool `json:"gkeEnvironment,omitempty"`
 }
 
+// S3AddressingStyle controls how bucket names are included in S3 requests.
+type S3AddressingStyle string
+
+const (
+	// S3AddressingStyleAuto lets the S3 client select the addressing style.
+	S3AddressingStyleAuto S3AddressingStyle = "auto"
+	// S3AddressingStyleVirtual uses virtual-hosted-style S3 requests.
+	S3AddressingStyleVirtual S3AddressingStyle = "virtual"
+	// S3AddressingStylePath uses path-style S3 requests.
+	S3AddressingStylePath S3AddressingStyle = "path"
+)
+
 // BarmanObjectStoreConfiguration contains the backup configuration
 // using Barman against an S3-compatible object storage
 type BarmanObjectStoreConfiguration struct {
@@ -175,6 +187,12 @@ type BarmanObjectStoreConfiguration struct {
 	// overriding the automatic endpoint discovery
 	// +optional
 	EndpointURL string `json:"endpointURL,omitempty"`
+
+	// The addressing style to use for S3 requests.
+	// When not specified, the S3 client selects the addressing style automatically.
+	// +kubebuilder:validation:Enum=auto;virtual;path
+	// +optional
+	AddressingStyle S3AddressingStyle `json:"addressingStyle,omitempty"`
 
 	// EndpointCA store the CA bundle of the barman endpoint.
 	// Useful when using self-signed certificates to avoid
