@@ -142,6 +142,26 @@ func envSetAWSCredentials(
 		return nil, fmt.Errorf("missing S3 credentials")
 	}
 
+	// Get the region, before the role-based exit below rather than alongside the
+	// keys. The region is not a credential: it can say where a bucket is, and a
+	// store in another region needs it whichever way the pod authenticates. Read
+	// after the exit, a store reached through an IAM role could never be told its
+	// region, so it fell back to whatever the pod environment happened to say.
+	// For a bucket outside that region is the wrong answer, and not one the
+	// configuration had any way to correct.
+	if s3credentials.RegionReference != nil {
+		region, regionErr := extractValueFromSecret(
+			ctx,
+			client,
+			s3credentials.RegionReference,
+			namespace,
+		)
+		if regionErr != nil {
+			return nil, regionErr
+		}
+		env = append(env, fmt.Sprintf("AWS_DEFAULT_REGION=%s", region))
+	}
+
 	if s3credentials.InheritFromIAMRole {
 		return env, nil
 	}
@@ -172,19 +192,6 @@ func envSetAWSCredentials(
 	)
 	if secretAccessErr != nil {
 		return nil, secretAccessErr
-	}
-
-	if s3credentials.RegionReference != nil {
-		region, regionErr := extractValueFromSecret(
-			ctx,
-			client,
-			s3credentials.RegionReference,
-			namespace,
-		)
-		if regionErr != nil {
-			return nil, regionErr
-		}
-		env = append(env, fmt.Sprintf("AWS_DEFAULT_REGION=%s", region))
 	}
 
 	// Get session token secret
