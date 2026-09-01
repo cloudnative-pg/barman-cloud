@@ -25,6 +25,9 @@ import (
 	"fmt"
 	"math"
 	"os/exec"
+	"path"
+	"regexp"
+	"strconv"
 	"sync"
 	"time"
 
@@ -37,7 +40,10 @@ import (
 
 const (
 	endOfWALStreamFlagFilename = "end-of-wal-stream"
+	endOfWALStreamFlagPrefix   = endOfWALStreamFlagFilename + "-"
 )
+
+var walSegmentRe = regexp.MustCompile(`^([0-9A-F]{8})([0-9A-F]{8})([0-9A-F]{8})$`)
 
 // ErrWALNotFound is returned when the WAL is not found in the cloud archive
 var ErrWALNotFound = errors.New("WAL not found")
@@ -123,9 +129,42 @@ func (restorer *WALRestorer) RestoreFromSpool(walName, destinationPath string) (
 	}
 }
 
-// SetEndOfWALStream add end-of-wal-stream in the spool directory
+// SetEndOfWALStream add end-of-wal-stream in the spool directory.
+//
+// Deprecated: use SetEndOfWALStreamFromResults to avoid sharing the same marker
+// across WAL timelines.
 func (restorer *WALRestorer) SetEndOfWALStream() error {
-	contains, err := restorer.IsEndOfWALStream()
+	return restorer.setEndOfWALStream(endOfWALStreamFlagFilename)
+}
+
+// SetEndOfWALStreamFromResults sets timeline-scoped end-of-wal-stream markers
+// for missing regular WAL segment files in the passed restore results. It
+// returns true if any marker was set or already present.
+func (restorer *WALRestorer) SetEndOfWALStreamFromResults(results []Result) (markerSet bool, err error) {
+	timelines := make(map[uint32]struct{})
+	for _, result := range results {
+		if !errors.Is(result.Err, ErrWALNotFound) {
+			continue
+		}
+
+		timeline, err := timelineFromWALName(result.WalName)
+		if err != nil {
+			continue
+		}
+		timelines[timeline] = struct{}{}
+	}
+
+	for timeline := range timelines {
+		if err := restorer.setEndOfWALStream(endOfWALStreamFlagName(timeline)); err != nil {
+			return false, err
+		}
+	}
+
+	return len(timelines) > 0, nil
+}
+
+func (restorer *WALRestorer) setEndOfWALStream(flagName string) error {
+	contains, err := restorer.isEndOfWALStream(flagName)
 	if err != nil {
 		return err
 	}
@@ -134,7 +173,7 @@ func (restorer *WALRestorer) SetEndOfWALStream() error {
 		return nil
 	}
 
-	err = restorer.spool.Touch(endOfWALStreamFlagFilename)
+	err = restorer.spool.Touch(flagName)
 	if err != nil {
 		return err
 	}
@@ -142,9 +181,49 @@ func (restorer *WALRestorer) SetEndOfWALStream() error {
 	return nil
 }
 
-// IsEndOfWALStream check whether end-of-wal-stream flag is presents in the spool directory
+// IsEndOfWALStream check whether end-of-wal-stream flag is presents in the spool directory.
+//
+// Deprecated: use ConsumeEndOfWALStreamForWAL to avoid sharing the same marker
+// across WAL timelines.
 func (restorer *WALRestorer) IsEndOfWALStream() (bool, error) {
-	isEOS, err := restorer.spool.Contains(endOfWALStreamFlagFilename)
+	return restorer.isEndOfWALStream(endOfWALStreamFlagFilename)
+}
+
+// ConsumeEndOfWALStreamForWAL removes and returns whether an end-of-wal-stream
+// marker is present for the requested WAL segment's timeline. Non-WAL names do
+// not consume markers.
+func (restorer *WALRestorer) ConsumeEndOfWALStreamForWAL(walName string) (markerConsumed bool, err error) {
+	timeline, err := timelineFromWALName(walName)
+	if err != nil {
+		return false, nil
+	}
+
+	containsLegacy, err := restorer.isEndOfWALStream(endOfWALStreamFlagFilename)
+	if err != nil {
+		return false, err
+	}
+	if containsLegacy {
+		if err := restorer.resetEndOfWalStream(endOfWALStreamFlagFilename); err != nil {
+			return false, err
+		}
+	}
+
+	markerConsumed, err = restorer.isEndOfWALStream(endOfWALStreamFlagName(timeline))
+	if err != nil {
+		return false, err
+	}
+	if !markerConsumed {
+		return false, nil
+	}
+
+	if err := restorer.resetEndOfWalStream(endOfWALStreamFlagName(timeline)); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (restorer *WALRestorer) isEndOfWALStream(flagName string) (bool, error) {
+	isEOS, err := restorer.spool.Contains(flagName)
 	if err != nil {
 		return false, fmt.Errorf("failed to check end-of-wal-stream flag: %w", err)
 	}
@@ -152,14 +231,42 @@ func (restorer *WALRestorer) IsEndOfWALStream() (bool, error) {
 	return isEOS, nil
 }
 
-// ResetEndOfWalStream remove end-of-wal-stream flag from the spool directory
+// ResetEndOfWalStream remove end-of-wal-stream flag from the spool directory.
+//
+// Deprecated: use ConsumeEndOfWALStreamForWAL to avoid sharing the same
+// marker across WAL timelines.
 func (restorer *WALRestorer) ResetEndOfWalStream() error {
-	err := restorer.spool.Remove(endOfWALStreamFlagFilename)
+	return restorer.resetEndOfWalStream(endOfWALStreamFlagFilename)
+}
+
+func (restorer *WALRestorer) resetEndOfWalStream(flagName string) error {
+	err := restorer.spool.Remove(flagName)
 	if err != nil {
 		return fmt.Errorf("failed to remove end-of-wal-stream flag: %w", err)
 	}
 
 	return nil
+}
+
+func endOfWALStreamFlagName(timeline uint32) string {
+	return fmt.Sprintf("%s%08X", endOfWALStreamFlagPrefix, timeline)
+}
+
+// timelineFromWALName extracts the timeline from a regular WAL segment file
+// name. It fails with ErrInvalidWALName for any other name (e.g. timeline
+// history or backup label files); no other error is possible.
+func timelineFromWALName(walName string) (uint32, error) {
+	subMatches := walSegmentRe.FindStringSubmatch(path.Base(walName))
+	if len(subMatches) != 4 {
+		return 0, ErrInvalidWALName
+	}
+
+	timeline, err := strconv.ParseUint(subMatches[1], 16, 32)
+	if err != nil {
+		return 0, ErrInvalidWALName
+	}
+
+	return uint32(timeline), nil
 }
 
 // RestoreList restores a list of WALs. The first WAL of the list will go directly into the
