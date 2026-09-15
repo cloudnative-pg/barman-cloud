@@ -72,6 +72,38 @@ func ValidateBackupConfiguration(
 		))
 	}
 
+	allErrors = append(allErrors, validateSSECustomerKey(barmanObjectStore, path)...)
+
+	return allErrors
+}
+
+// validateSSECustomerKey checks that SSE-C is not combined with the other
+// server-side encryption modes, which barman-cloud rejects
+func validateSSECustomerKey(
+	barmanObjectStore *api.BarmanObjectStoreConfiguration,
+	path *field.Path,
+) field.ErrorList {
+	if barmanObjectStore.AWS == nil || barmanObjectStore.AWS.SSECustomerKey == nil {
+		return nil
+	}
+
+	const message = "cannot be used together with s3Credentials.sseCustomerKey"
+	allErrors := field.ErrorList{}
+	if barmanObjectStore.Data != nil && barmanObjectStore.Data.Encryption != "" {
+		allErrors = append(allErrors, field.Invalid(
+			path.Child("data", "encryption"),
+			barmanObjectStore.Data.Encryption,
+			message,
+		))
+	}
+	if barmanObjectStore.Wal != nil && barmanObjectStore.Wal.Encryption != "" {
+		allErrors = append(allErrors, field.Invalid(
+			path.Child("wal", "encryption"),
+			barmanObjectStore.Wal.Encryption,
+			message,
+		))
+	}
+
 	return allErrors
 }
 

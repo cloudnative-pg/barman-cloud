@@ -20,6 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 package webhooks
 
 import (
+	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	api "github.com/cloudnative-pg/barman-cloud/pkg/api"
@@ -39,6 +40,37 @@ var _ = Describe("Backup validation", func() {
 	It("doesn't complain if given policy is not provided", func() {
 		err := ValidateBackupConfiguration(nil, nil)
 		Expect(err).To(BeEmpty())
+	})
+
+	Context("with an SSE-C customer key", func() {
+		var configuration *api.BarmanObjectStoreConfiguration
+		BeforeEach(func() {
+			configuration = &api.BarmanObjectStoreConfiguration{
+				BarmanCredentials: api.BarmanCredentials{
+					AWS: &api.S3Credentials{
+						InheritFromIAMRole: true,
+						SSECustomerKey: &machineryapi.SecretKeySelector{
+							LocalObjectReference: machineryapi.LocalObjectReference{Name: "backup-keys"},
+							Key:                  "sse-c",
+						},
+					},
+				},
+			}
+		})
+
+		It("accepts it on its own", func() {
+			err := ValidateBackupConfiguration(configuration, field.NewPath("spec"))
+			Expect(err).To(BeEmpty())
+		})
+
+		It("rejects it together with data or wal encryption", func() {
+			configuration.Data = &api.DataBackupConfiguration{Encryption: api.EncryptionTypeAES256}
+			configuration.Wal = &api.WalBackupConfiguration{Encryption: api.EncryptionTypeAES256}
+			err := ValidateBackupConfiguration(configuration, field.NewPath("spec"))
+			Expect(err).To(HaveLen(2))
+			Expect(err[0].Field).To(Equal("spec.data.encryption"))
+			Expect(err[1].Field).To(Equal("spec.wal.encryption"))
+		})
 	})
 })
 

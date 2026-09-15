@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 const (
@@ -142,6 +143,13 @@ func envSetAWSCredentials(
 		return nil, fmt.Errorf("missing S3 credentials")
 	}
 
+	// Materialize the SSE-C customer key, if any, before the auth-method
+	// handling below: SSE-C is orthogonal to authentication and must be
+	// available for every method, including inheritFromIAMRole.
+	if err := reconcileAWSSSECustomerKey(ctx, client, namespace, s3credentials); err != nil {
+		return nil, err
+	}
+
 	if s3credentials.InheritFromIAMRole {
 		return env, nil
 	}
@@ -205,6 +213,32 @@ func envSetAWSCredentials(
 	env = append(env, fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", secretAccessKey))
 
 	return env, nil
+}
+
+// reconcileAWSSSECustomerKey materializes (or removes) the S3 SSE-C customer
+// key file referenced by the S3 credentials. barman-cloud consumes it through
+// the '--sse-customer-key file://' option, so the key must exist on disk next
+// to the process that runs the barman-cloud commands. The referenced secret is
+// expected to contain a base64-encoded 256-bit AES key, which barman-cloud
+// validates when it reads the file.
+func reconcileAWSSSECustomerKey(
+	ctx context.Context,
+	c client.Client,
+	namespace string,
+	s3credentials *barmanApi.S3Credentials,
+) error {
+	if s3credentials.SSECustomerKey == nil {
+		return fileutils.RemoveFile(utils.SSECustomerKeyFileLocation)
+	}
+
+	key, err := extractValueFromSecret(ctx, c, s3credentials.SSECustomerKey, namespace)
+	if err != nil {
+		return err
+	}
+
+	_, err = fileutils.WriteFileAtomic(utils.SSECustomerKeyFileLocation, key, 0o600)
+
+	return err
 }
 
 // envSetAzureCredentials sets the Azure environment variables given the configuration
