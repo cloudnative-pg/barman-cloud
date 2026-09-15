@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/cloudnative-pg/barman-cloud/compare/v0.6.0...v0.6.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* require a strict majority to pass a gitvote vote ([#302](https://github.com/cloudnative-pg/barman-cloud/issues/302)) ([cb94acf](https://github.com/cloudnative-pg/barman-cloud/commit/cb94acf8ae640563a7fce4f12e6843943428f7f7))
+
 ## [0.6.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.5.1...v0.6.0) (2026-09-02)
 
 
