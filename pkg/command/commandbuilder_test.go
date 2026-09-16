@@ -62,6 +62,21 @@ var _ = Describe("barmanCloudWalRestoreOptions", func() {
 					"s3://bucket-name/ test-cluster --read-timeout=60 -vv",
 				))
 	})
+
+	It("should apply the configured S3 addressing style", func(ctx SpecContext) {
+		storageConf.BarmanCredentials = barmanApi.BarmanCredentials{
+			AWS: &barmanApi.S3Credentials{InheritFromIAMRole: true},
+		}
+		storageConf.S3AddressingStyle = barmanApi.S3AddressingStyleVirtual
+
+		options, err := CloudWalRestoreOptions(ctx, storageConf, "test-cluster")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(options).To(Equal([]string{
+			"--cloud-provider", "aws-s3",
+			"--addressing-style", "virtual",
+			"s3://bucket-name/", "test-cluster",
+		}))
+	})
 })
 
 var _ = Describe("useDefaultAzureCredentials", func() {
@@ -170,5 +185,35 @@ var _ = Describe("AppendCloudProviderOptions with Azure credentials", func() {
 			"--cloud-provider", "azure-blob-storage",
 			"--credential", "default",
 		))
+	})
+})
+
+var _ = Describe("AppendCloudProviderOptionsFromConfiguration with S3 addressing", func() {
+	It("should replace an addressing style from command-specific arguments", func(ctx SpecContext) {
+		configuration := &barmanApi.BarmanObjectStoreConfiguration{
+			BarmanCredentials: barmanApi.BarmanCredentials{
+				AWS: &barmanApi.S3Credentials{InheritFromIAMRole: true},
+			},
+			S3AddressingStyle: barmanApi.S3AddressingStyleVirtual,
+		}
+
+		options, err := AppendCloudProviderOptionsFromConfiguration(ctx, []string{
+			"--addressing-style", "path", "--read-timeout=60",
+		}, configuration)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(options).To(Equal([]string{
+			"--read-timeout=60",
+			"--cloud-provider", "aws-s3",
+			"--addressing-style", "virtual",
+		}))
+	})
+
+	It("should reject an addressing style without S3 credentials", func(ctx SpecContext) {
+		configuration := &barmanApi.BarmanObjectStoreConfiguration{
+			S3AddressingStyle: barmanApi.S3AddressingStyleVirtual,
+		}
+
+		_, err := AppendCloudProviderOptionsFromConfiguration(ctx, nil, configuration)
+		Expect(err).To(MatchError("s3AddressingStyle requires s3Credentials"))
 	})
 })

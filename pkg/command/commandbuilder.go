@@ -21,6 +21,8 @@ package command
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
 )
@@ -62,7 +64,27 @@ func AppendCloudProviderOptionsFromConfiguration(
 	options []string,
 	barmanConfiguration *barmanApi.BarmanObjectStoreConfiguration,
 ) ([]string, error) {
-	return appendCloudProviderOptions(ctx, options, barmanConfiguration.BarmanCredentials)
+	if barmanConfiguration.S3AddressingStyle != "" {
+		if barmanConfiguration.AWS == nil {
+			return nil, fmt.Errorf("s3AddressingStyle requires s3Credentials")
+		}
+
+		options = withoutOption(options, "--addressing-style")
+	}
+
+	options, err := appendCloudProviderOptions(ctx, options, barmanConfiguration.BarmanCredentials)
+	if err != nil {
+		return nil, err
+	}
+
+	if barmanConfiguration.S3AddressingStyle != "" {
+		options = append(options,
+			"--addressing-style",
+			string(barmanConfiguration.S3AddressingStyle),
+		)
+	}
+
+	return options, nil
 }
 
 // AppendCloudProviderOptionsFromBackup takes an options array and adds the cloud provider specified
@@ -125,6 +147,28 @@ func appendCloudProviderOptions(
 	}
 
 	return options, nil
+}
+
+// withoutOption removes a command-line option and its value from options.
+// The configured ObjectStore value must take precedence over a command-specific
+// additional argument so every Barman command uses the same addressing style.
+func withoutOption(options []string, option string) []string {
+	result := make([]string, 0, len(options))
+	for index := 0; index < len(options); index++ {
+		current := options[index]
+		switch {
+		case current == option:
+			if index+1 < len(options) {
+				index++
+			}
+		case strings.HasPrefix(current, option+"="):
+			continue
+		default:
+			result = append(result, current)
+		}
+	}
+
+	return result
 }
 
 type contextKey string
