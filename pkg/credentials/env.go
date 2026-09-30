@@ -22,6 +22,8 @@ package credentials
 import (
 	"context"
 	"fmt"
+	"path"
+	"sync"
 
 	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 	"github.com/cloudnative-pg/machinery/pkg/fileutils"
@@ -287,6 +289,18 @@ func envSetAzureCredentials(
 	return env, nil
 }
 
+// googleCredentialsDirectory is where the Google application credentials are
+// materialized from their secrets. It is a variable so that tests can
+// redirect it.
+var googleCredentialsDirectory = path.Join(ScratchDataDirectory, ".google-credentials")
+
+// googleCredentialsMutex serializes the writes of the Google application
+// credentials files. fileutils.WriteFileAtomic names its temporary file after
+// the current second, so two concurrent writes of the same file would share
+// it, and one of them could truncate the file the other has just renamed
+// into place.
+var googleCredentialsMutex sync.Mutex
+
 func envSetGoogleCredentials(
 	ctx context.Context,
 	c client.Client,
@@ -294,11 +308,9 @@ func envSetGoogleCredentials(
 	googleCredentials *barmanApi.GoogleCredentials,
 	env []string,
 ) ([]string, error) {
-	var applicationCredentialsContent []byte
-
 	if googleCredentials.GKEEnvironment &&
 		googleCredentials.ApplicationCredentials == nil {
-		return env, reconcileGoogleCredentials(googleCredentials, applicationCredentialsContent)
+		return env, nil
 	}
 
 	applicationCredentialsContent, err := extractValueFromSecret(
@@ -311,28 +323,26 @@ func envSetGoogleCredentials(
 		return nil, err
 	}
 
-	if err := reconcileGoogleCredentials(googleCredentials, applicationCredentialsContent); err != nil {
+	// The file path depends on the referenced secret and key: a single
+	// process can serve object stores with different credentials
+	// concurrently (e.g. a replica cluster archiving to its own object store
+	// while restoring from the source one), and a shared file would let a
+	// command run with the credentials of another object store.
+	credentialsPath := path.Join(
+		googleCredentialsDirectory,
+		googleCredentials.ApplicationCredentials.Name,
+		googleCredentials.ApplicationCredentials.Key,
+	)
+
+	googleCredentialsMutex.Lock()
+	defer googleCredentialsMutex.Unlock()
+	if _, err := fileutils.WriteFileAtomic(credentialsPath, applicationCredentialsContent, 0o600); err != nil {
 		return nil, err
 	}
 
-	env = append(env, "GOOGLE_APPLICATION_CREDENTIALS=/controller/.application_credentials.json")
+	env = append(env, "GOOGLE_APPLICATION_CREDENTIALS="+credentialsPath)
 
 	return env, nil
-}
-
-func reconcileGoogleCredentials(
-	googleCredentials *barmanApi.GoogleCredentials,
-	applicationCredentialsContent []byte,
-) error {
-	credentialsPath := "/controller/.application_credentials.json"
-
-	if googleCredentials == nil {
-		return fileutils.RemoveFile(credentialsPath)
-	}
-
-	_, err := fileutils.WriteFileAtomic(credentialsPath, applicationCredentialsContent, 0o600)
-
-	return err
 }
 
 func extractValueFromSecret(
