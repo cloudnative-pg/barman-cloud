@@ -23,7 +23,10 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"path"
 	"regexp"
+
+	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 )
 
 var regexPolicy = regexp.MustCompile(`([1-9][0-9]*)([dwm])$`)
@@ -62,4 +65,12 @@ func MapToBarmanTagsFormat(option string, mapTags map[string]string) ([]string, 
 	}
 
 	return tags, nil
+}
+
+// SSECustomerKeyFilePath returns the path where the S3 SSE-C customer key
+// referenced by the passed selector is materialized. The path depends on the
+// referenced secret and key, so that object stores using different keys
+// never share the same file, even when their commands run concurrently.
+func SSECustomerKeyFilePath(selector *machineryapi.SecretKeySelector) string {
+	return path.Join(SSECustomerKeysDirectory, selector.Name, selector.Key)
 }
