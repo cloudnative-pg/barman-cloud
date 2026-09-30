@@ -282,8 +282,8 @@ type WalBackupConfiguration struct {
 type DataBackupConfiguration struct {
 	// Compress a backup file (a tar file per tablespace) while streaming it
 	// to the object store. Available options are empty string (no
-	// compression, default), `gzip`, `bzip2`, `lz4`, and `snappy`.
-	// +kubebuilder:validation:Enum=bzip2;gzip;lz4;snappy
+	// compression, default), `gzip`, `bzip2`, `lz4`, `snappy`, and `zstd`.
+	// +kubebuilder:validation:Enum=bzip2;gzip;lz4;snappy;zstd
 	// +optional
 	Compression CompressionType `json:"compression,omitempty"`
 
