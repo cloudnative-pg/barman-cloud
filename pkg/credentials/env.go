@@ -216,6 +216,12 @@ func envSetAWSCredentials(
 	return env, nil
 }
 
+// sseCustomerKeyMutex serializes the writes of the SSE-C customer key files.
+// fileutils.WriteFileAtomic names its temporary file after the current second,
+// so two concurrent writes of the same key file would share it, and one of
+// them could truncate the file the other has just renamed into place.
+var sseCustomerKeyMutex sync.Mutex
+
 // reconcileAWSSSECustomerKey materializes the S3 SSE-C customer key file
 // referenced by the S3 credentials. barman-cloud consumes it through the
 // '--sse-customer-key file://' option, so the key must exist on disk next to
@@ -226,12 +232,6 @@ func envSetAWSCredentials(
 // would let a command pick up the key of another object store. The
 // referenced secret is expected to contain a base64-encoded 256-bit AES key,
 // which barman-cloud validates when it reads the file.
-// sseCustomerKeyMutex serializes the writes of the SSE-C customer key files.
-// fileutils.WriteFileAtomic names its temporary file after the current second,
-// so two concurrent writes of the same key file would share it, and one of
-// them could truncate the file the other has just renamed into place.
-var sseCustomerKeyMutex sync.Mutex
-
 func reconcileAWSSSECustomerKey(
 	ctx context.Context,
 	c client.Client,
