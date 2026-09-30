@@ -22,6 +22,7 @@ package credentials
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 	"github.com/cloudnative-pg/machinery/pkg/fileutils"
@@ -225,6 +226,12 @@ func envSetAWSCredentials(
 // would let a command pick up the key of another object store. The
 // referenced secret is expected to contain a base64-encoded 256-bit AES key,
 // which barman-cloud validates when it reads the file.
+// sseCustomerKeyMutex serializes the writes of the SSE-C customer key files.
+// fileutils.WriteFileAtomic names its temporary file after the current second,
+// so two concurrent writes of the same key file would share it, and one of
+// them could truncate the file the other has just renamed into place.
+var sseCustomerKeyMutex sync.Mutex
+
 func reconcileAWSSSECustomerKey(
 	ctx context.Context,
 	c client.Client,
@@ -240,6 +247,8 @@ func reconcileAWSSSECustomerKey(
 		return err
 	}
 
+	sseCustomerKeyMutex.Lock()
+	defer sseCustomerKeyMutex.Unlock()
 	_, err = fileutils.WriteFileAtomic(
 		utils.SSECustomerKeyFilePath(s3credentials.SSECustomerKey), key, 0o600)
 
