@@ -26,7 +26,6 @@ import (
 	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
-	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -211,7 +210,29 @@ var _ = Describe("AppendCloudProviderOptions with AWS credentials", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result).To(Equal([]string{
 			"--cloud-provider", "aws-s3",
-			"--sse-customer-key", "file://" + utils.SSECustomerKeyFileLocation,
+			"--sse-customer-key", "file:///controller/.sse-customer-keys/sse-c-key/key",
 		}))
+	})
+
+	It("should point object stores with different customer keys at different files", func(ctx SpecContext) {
+		keyFileOption := func(secretName string) string {
+			credentials := barmanApi.BarmanCredentials{
+				AWS: &barmanApi.S3Credentials{
+					InheritFromIAMRole: true,
+					SSECustomerKey: &machineryapi.SecretKeySelector{
+						LocalObjectReference: machineryapi.LocalObjectReference{
+							Name: secretName,
+						},
+						Key: "key",
+					},
+				},
+			}
+			result, err := appendCloudProviderOptions(ctx, []string{}, credentials)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result).To(HaveLen(4))
+			return result[3]
+		}
+
+		Expect(keyFileOption("store-a-key")).ToNot(Equal(keyFileOption("store-b-key")))
 	})
 })

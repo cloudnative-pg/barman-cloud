@@ -96,7 +96,7 @@ func appendCloudProviderOptions(
 			options = append(
 				options,
 				"--sse-customer-key",
-				"file://"+utils.SSECustomerKeyFileLocation)
+				"file://"+utils.SSECustomerKeyFilePath(credentials.AWS.SSECustomerKey))
 		}
 	case credentials.Azure != nil:
 		options = append(
