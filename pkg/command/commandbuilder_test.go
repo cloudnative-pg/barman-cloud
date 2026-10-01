@@ -62,6 +62,25 @@ var _ = Describe("barmanCloudWalRestoreOptions", func() {
 					"s3://bucket-name/ test-cluster --read-timeout=60 -vv",
 				))
 	})
+
+	It("should keep the configured S3 addressing style over the additional arguments", func(ctx SpecContext) {
+		storageConf.BarmanCredentials = barmanApi.BarmanCredentials{
+			AWS: &barmanApi.S3Credentials{InheritFromIAMRole: true},
+		}
+		storageConf.S3AddressingStyle = barmanApi.S3AddressingStyleVirtual
+		storageConf.Wal = &barmanApi.WalBackupConfiguration{
+			RestoreAdditionalCommandArgs: []string{"--addressing-style=path", "-vv"},
+		}
+
+		options, err := CloudWalRestoreOptions(ctx, storageConf, "test-cluster")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(strings.Join(options, " ")).
+			To(
+				Equal(
+					"--cloud-provider aws-s3 --addressing-style virtual " +
+						"s3://bucket-name/ test-cluster -vv",
+				))
+	})
 })
 
 var _ = Describe("useDefaultAzureCredentials", func() {
@@ -179,7 +198,7 @@ var _ = Describe("AppendCloudProviderOptionsFromConfiguration with S3 addressing
 			BarmanCredentials: barmanApi.BarmanCredentials{
 				AWS: &barmanApi.S3Credentials{},
 			},
-			AddressingStyle: barmanApi.S3AddressingStyleVirtual,
+			S3AddressingStyle: barmanApi.S3AddressingStyleVirtual,
 		}
 
 		result, err := AppendCloudProviderOptionsFromConfiguration(ctx, nil, configuration)
@@ -207,7 +226,7 @@ var _ = Describe("AppendCloudProviderOptionsFromConfiguration with S3 addressing
 			BarmanCredentials: barmanApi.BarmanCredentials{
 				Google: &barmanApi.GoogleCredentials{},
 			},
-			AddressingStyle: barmanApi.S3AddressingStyleVirtual,
+			S3AddressingStyle: barmanApi.S3AddressingStyleVirtual,
 		}
 
 		result, err := AppendCloudProviderOptionsFromConfiguration(ctx, nil, configuration)

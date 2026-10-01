@@ -144,4 +144,25 @@ var _ = Describe("GetBarmanCloudBackupOptions", func() {
 						"s3://bucket-name/ test-cluster",
 				))
 	})
+
+	It("should put the configured S3 addressing style after the additional arguments", func(ctx SpecContext) {
+		backupCommand.configuration.BarmanCredentials = barmanApi.BarmanCredentials{
+			AWS: &barmanApi.S3Credentials{InheritFromIAMRole: true},
+		}
+		backupCommand.configuration.S3AddressingStyle = barmanApi.S3AddressingStyleVirtual
+		backupCommand.configuration.Data.AdditionalCommandArgs = []string{"--addressing-style", "path"}
+
+		options, err := backupCommand.GetBarmanCloudBackupOptions(ctx, "test-backup", "test-cluster")
+		Expect(err).ToNot(HaveOccurred())
+		// barman-cloud takes the last occurrence of the option
+		Expect(strings.Join(options, " ")).
+			To(
+				Equal(
+					"--user postgres --name test-backup " +
+						"--gzip --encryption aes256 --immediate-checkpoint --jobs 4 " +
+						"--addressing-style path " +
+						"--cloud-provider aws-s3 --addressing-style virtual " +
+						"s3://bucket-name/ test-cluster",
+				))
+	})
 })

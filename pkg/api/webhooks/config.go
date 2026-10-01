@@ -72,6 +72,14 @@ func ValidateBackupConfiguration(
 		))
 	}
 
+	if barmanObjectStore.S3AddressingStyle != "" && barmanObjectStore.AWS == nil {
+		allErrors = append(allErrors, field.Invalid(
+			path.Child("s3AddressingStyle"),
+			barmanObjectStore.S3AddressingStyle,
+			"s3AddressingStyle requires s3Credentials",
+		))
+	}
+
 	return allErrors
 }
 

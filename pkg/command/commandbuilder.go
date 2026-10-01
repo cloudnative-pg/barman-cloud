@@ -67,8 +67,8 @@ func AppendCloudProviderOptionsFromConfiguration(
 		return nil, err
 	}
 
-	if barmanConfiguration.AWS != nil && barmanConfiguration.AddressingStyle != "" {
-		options = append(options, "--addressing-style", string(barmanConfiguration.AddressingStyle))
+	if barmanConfiguration.AWS != nil && barmanConfiguration.S3AddressingStyle != "" {
+		options = append(options, "--addressing-style", string(barmanConfiguration.S3AddressingStyle))
 	}
 
 	return options, nil

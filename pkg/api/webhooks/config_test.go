@@ -40,6 +40,31 @@ var _ = Describe("Backup validation", func() {
 		err := ValidateBackupConfiguration(nil, nil)
 		Expect(err).To(BeEmpty())
 	})
+
+	It("complain if s3AddressingStyle is set without s3Credentials", func() {
+		err := ValidateBackupConfiguration(
+			&api.BarmanObjectStoreConfiguration{
+				BarmanCredentials: api.BarmanCredentials{
+					Google: &api.GoogleCredentials{GKEEnvironment: true},
+				},
+				S3AddressingStyle: api.S3AddressingStyleVirtual,
+			},
+			field.NewPath("spec", "configuration"))
+		Expect(err).To(HaveLen(1))
+		Expect(err[0].Field).To(Equal("spec.configuration.s3AddressingStyle"))
+	})
+
+	It("accepts s3AddressingStyle with s3Credentials", func() {
+		err := ValidateBackupConfiguration(
+			&api.BarmanObjectStoreConfiguration{
+				BarmanCredentials: api.BarmanCredentials{
+					AWS: &api.S3Credentials{InheritFromIAMRole: true},
+				},
+				S3AddressingStyle: api.S3AddressingStyleVirtual,
+			},
+			field.NewPath("spec", "configuration"))
+		Expect(err).To(BeEmpty())
+	})
 })
 
 var _ = Describe("Retention Policy Validation", func() {
