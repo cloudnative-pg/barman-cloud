@@ -20,6 +20,8 @@ SPDX-License-Identifier: Apache-2.0
 package utils //nolint:revive
 
 import (
+	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -52,5 +54,28 @@ var _ = Describe("converting map to barman tags format", func() {
 	It("works properly, given a map of tags", func() {
 		tags := map[string]string{"retentionDays": "90days"}
 		Expect(MapToBarmanTagsFormat("test", tags)).To(BeEquivalentTo([]string{"test", "retentionDays,90days"}))
+	})
+})
+
+var _ = Describe("SSE-C customer key file path", func() {
+	selector := func(name, key string) *machineryapi.SecretKeySelector {
+		return &machineryapi.SecretKeySelector{
+			LocalObjectReference: machineryapi.LocalObjectReference{Name: name},
+			Key:                  key,
+		}
+	}
+
+	It("never shares a file between different secret keys", func() {
+		paths := []string{
+			SSECustomerKeyFilePath(selector("store-a", "key")),
+			SSECustomerKeyFilePath(selector("store-b", "key")),
+			SSECustomerKeyFilePath(selector("store-a", "other")),
+			SSECustomerKeyFilePath(selector("store-a.key", "x")),
+			SSECustomerKeyFilePath(selector("store-a", "key.x")),
+		}
+		Expect(paths).To(HaveLen(5))
+		for i := range paths {
+			Expect(paths[i+1:]).ToNot(ContainElement(paths[i]))
+		}
 	})
 })

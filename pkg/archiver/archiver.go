@@ -23,6 +23,7 @@ package archiver
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/cloudnative-pg/machinery/pkg/log"
@@ -152,6 +153,12 @@ func (archiver *WALArchiver) BarmanCloudCheckWalArchiveOptions(
 	options, err := command.AppendCloudProviderOptionsFromConfiguration(ctx, options, configuration)
 	if err != nil {
 		return nil, err
+	}
+
+	// barman-cloud-check-wal-archive only lists the objects in the bucket:
+	// it does not need the SSE-C customer key, and it rejects the option
+	if i := slices.Index(options, "--sse-customer-key"); i >= 0 {
+		options = slices.Delete(options, i, i+2)
 	}
 
 	serverName := clusterName

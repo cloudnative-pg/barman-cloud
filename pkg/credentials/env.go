@@ -22,6 +22,7 @@ package credentials
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 	"github.com/cloudnative-pg/machinery/pkg/fileutils"
@@ -29,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 const (
@@ -142,6 +144,13 @@ func envSetAWSCredentials(
 		return nil, fmt.Errorf("missing S3 credentials")
 	}
 
+	// Materialize the SSE-C customer key, if any, before the auth-method
+	// handling below: SSE-C is orthogonal to authentication and must be
+	// available for every method, including inheritFromIAMRole.
+	if err := reconcileAWSSSECustomerKey(ctx, client, namespace, s3credentials); err != nil {
+		return nil, err
+	}
+
 	if s3credentials.InheritFromIAMRole {
 		return env, nil
 	}
@@ -205,6 +214,45 @@ func envSetAWSCredentials(
 	env = append(env, fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", secretAccessKey))
 
 	return env, nil
+}
+
+// sseCustomerKeyMutex serializes the writes of the SSE-C customer key files.
+// fileutils.WriteFileAtomic names its temporary file after the current second,
+// so two concurrent writes of the same key file would share it, and one of
+// them could truncate the file the other has just renamed into place.
+var sseCustomerKeyMutex sync.Mutex
+
+// reconcileAWSSSECustomerKey materializes the S3 SSE-C customer key file
+// referenced by the S3 credentials. barman-cloud consumes it through the
+// '--sse-customer-key file://' option, so the key must exist on disk next to
+// the process that runs the barman-cloud commands. The file path depends on
+// the referenced secret and key: a single process can serve object stores
+// with different keys concurrently (e.g. a replica cluster archiving to its
+// own object store while restoring from the source one), and a shared file
+// would let a command pick up the key of another object store. The
+// referenced secret is expected to contain a base64-encoded 256-bit AES key,
+// which barman-cloud validates when it reads the file.
+func reconcileAWSSSECustomerKey(
+	ctx context.Context,
+	c client.Client,
+	namespace string,
+	s3credentials *barmanApi.S3Credentials,
+) error {
+	if s3credentials.SSECustomerKey == nil {
+		return nil
+	}
+
+	key, err := extractValueFromSecret(ctx, c, s3credentials.SSECustomerKey, namespace)
+	if err != nil {
+		return err
+	}
+
+	sseCustomerKeyMutex.Lock()
+	defer sseCustomerKeyMutex.Unlock()
+	_, err = fileutils.WriteFileAtomic(
+		utils.SSECustomerKeyFilePath(s3credentials.SSECustomerKey), key, 0o600)
+
+	return err
 }
 
 // envSetAzureCredentials sets the Azure environment variables given the configuration
