@@ -84,6 +84,20 @@ var _ = Describe("GetBarmanCloudBackupOptions", func() {
 				))
 	})
 
+	It("should pass zstd compression as --zstd", func(ctx SpecContext) {
+		backupCommand.configuration.Data.Compression = barmanApi.CompressionTypeZstd
+
+		options, err := backupCommand.GetBarmanCloudBackupOptions(ctx, "test-backup", "test-cluster")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(strings.Join(options, " ")).
+			To(
+				Equal(
+					"--user postgres --name test-backup " +
+						"--zstd --encryption aes256 --immediate-checkpoint --jobs 4 " +
+						"s3://bucket-name/ test-cluster",
+				))
+	})
+
 	It("should append tags when set", func(ctx SpecContext) {
 		backupCommand.configuration.Tags = map[string]string{"tag": "foo"}
 
