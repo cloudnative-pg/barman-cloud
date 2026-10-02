@@ -62,6 +62,25 @@ var _ = Describe("barmanCloudWalRestoreOptions", func() {
 					"s3://bucket-name/ test-cluster --read-timeout=60 -vv",
 				))
 	})
+
+	It("should keep the configured S3 addressing style over the additional arguments", func(ctx SpecContext) {
+		storageConf.BarmanCredentials = barmanApi.BarmanCredentials{
+			AWS: &barmanApi.S3Credentials{InheritFromIAMRole: true},
+		}
+		storageConf.S3AddressingStyle = barmanApi.S3AddressingStyleVirtual
+		storageConf.Wal = &barmanApi.WalBackupConfiguration{
+			RestoreAdditionalCommandArgs: []string{"--addressing-style=path", "-vv"},
+		}
+
+		options, err := CloudWalRestoreOptions(ctx, storageConf, "test-cluster")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(strings.Join(options, " ")).
+			To(
+				Equal(
+					"--cloud-provider aws-s3 --addressing-style virtual " +
+						"s3://bucket-name/ test-cluster -vv",
+				))
+	})
 })
 
 var _ = Describe("useDefaultAzureCredentials", func() {
@@ -170,5 +189,48 @@ var _ = Describe("AppendCloudProviderOptions with Azure credentials", func() {
 			"--cloud-provider", "azure-blob-storage",
 			"--credential", "default",
 		))
+	})
+})
+
+var _ = Describe("AppendCloudProviderOptionsFromConfiguration with S3 addressing style", func() {
+	It("should append the addressing style for AWS S3", func(ctx SpecContext) {
+		configuration := &barmanApi.BarmanObjectStoreConfiguration{
+			BarmanCredentials: barmanApi.BarmanCredentials{
+				AWS: &barmanApi.S3Credentials{},
+			},
+			S3AddressingStyle: barmanApi.S3AddressingStyleVirtual,
+		}
+
+		result, err := AppendCloudProviderOptionsFromConfiguration(ctx, nil, configuration)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(Equal([]string{
+			"--cloud-provider", "aws-s3",
+			"--addressing-style", "virtual",
+		}))
+	})
+
+	It("should omit the addressing style when it is not configured", func(ctx SpecContext) {
+		configuration := &barmanApi.BarmanObjectStoreConfiguration{
+			BarmanCredentials: barmanApi.BarmanCredentials{
+				AWS: &barmanApi.S3Credentials{},
+			},
+		}
+
+		result, err := AppendCloudProviderOptionsFromConfiguration(ctx, nil, configuration)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(Equal([]string{"--cloud-provider", "aws-s3"}))
+	})
+
+	It("should ignore the addressing style for non-S3 providers", func(ctx SpecContext) {
+		configuration := &barmanApi.BarmanObjectStoreConfiguration{
+			BarmanCredentials: barmanApi.BarmanCredentials{
+				Google: &barmanApi.GoogleCredentials{},
+			},
+			S3AddressingStyle: barmanApi.S3AddressingStyleVirtual,
+		}
+
+		result, err := AppendCloudProviderOptionsFromConfiguration(ctx, nil, configuration)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(Equal([]string{"--cloud-provider", "google-cloud-storage"}))
 	})
 })
