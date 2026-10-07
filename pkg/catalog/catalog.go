@@ -370,7 +370,7 @@ func parseTimeWithFallbackLayout(value string, primaryLayout string, fallbackLay
 }
 
 func (b *BarmanBackup) isBackupDone() bool {
-	return !b.BeginTime.IsZero() && !b.EndTime.IsZero()
+	return !b.BeginTime.IsZero() && !b.EndTime.IsZero() && b.Error == ""
 }
 
 // NewCatalog creates a new sorted backup catalog, given a list of backup infos
