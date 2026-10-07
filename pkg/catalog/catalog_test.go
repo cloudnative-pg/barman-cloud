@@ -100,28 +100,40 @@ var _ = Describe("Backup catalog", func() {
 })
 
 type fakeRecoveryTarget struct {
-	backupID string
-	tli      string
+	backupID   string
+	targetTime string
+	targetLSN  string
+	tli        string
 }
 
-func (f fakeRecoveryTarget) GetBackupID() string  { return f.backupID }
-func (fakeRecoveryTarget) GetTargetTime() string  { return "" }
-func (fakeRecoveryTarget) GetTargetLSN() string   { return "" }
-func (f fakeRecoveryTarget) GetTargetTLI() string { return f.tli }
+func (f fakeRecoveryTarget) GetBackupID() string   { return f.backupID }
+func (f fakeRecoveryTarget) GetTargetTime() string { return f.targetTime }
+func (f fakeRecoveryTarget) GetTargetLSN() string  { return f.targetLSN }
+func (f fakeRecoveryTarget) GetTargetTLI() string  { return f.tli }
 
 var _ = Describe("Backup catalog with a failed backup", func() {
-	// The newest backup failed after barman stamped its end time
+	// The oldest and the newest backups failed after barman stamped their end time
 	catalog := NewCatalog([]BarmanBackup{
+		{
+			ID:        "202012311200",
+			BeginTime: time.Date(2020, 12, 31, 12, 0, 0, 0, time.UTC),
+			EndTime:   time.Date(2020, 12, 31, 12, 0, 5, 0, time.UTC),
+			EndLSN:    "0/1000000",
+			TimeLine:  1,
+			Error:     "failure uploading data (connection already closed)",
+		},
 		{
 			ID:        "202101011200",
 			BeginTime: time.Date(2021, 1, 1, 12, 0, 0, 0, time.UTC),
 			EndTime:   time.Date(2021, 1, 1, 12, 30, 0, 0, time.UTC),
+			EndLSN:    "0/3000000",
 			TimeLine:  1,
 		},
 		{
 			ID:        "202101021200",
 			BeginTime: time.Date(2021, 1, 2, 12, 0, 0, 0, time.UTC),
 			EndTime:   time.Date(2021, 1, 2, 12, 0, 5, 0, time.UTC),
+			EndLSN:    "0/5000000",
 			TimeLine:  1,
 			Error:     "failure uploading data (connection already closed)",
 		},
@@ -135,6 +147,23 @@ var _ = Describe("Backup catalog with a failed backup", func() {
 		backup, err := catalog.FindBackupInfo(fakeRecoveryTarget{tli: "1"})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(backup.ID).To(Equal("202101011200"))
+	})
+
+	It("skips the failed backup when looking for the closest to a target time", func() {
+		backup, err := catalog.FindBackupInfo(fakeRecoveryTarget{targetTime: "2021-01-03T00:00:00Z"})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(backup.ID).To(Equal("202101011200"))
+	})
+
+	It("skips the failed backup when looking for the closest to a target LSN", func() {
+		backup, err := catalog.FindBackupInfo(fakeRecoveryTarget{targetLSN: "0/6000000"})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(backup.ID).To(Equal("202101011200"))
+	})
+
+	It("skips the failed backup as the first recoverability point", func() {
+		Expect(*catalog.FirstRecoverabilityPoint()).To(
+			Equal(time.Date(2021, 1, 1, 12, 30, 0, 0, time.UTC)))
 	})
 
 	It("does not find the failed backup by ID", func() {
