@@ -264,6 +264,23 @@ type WalBackupConfiguration struct {
 	// +kubebuilder:validation:Minimum=1
 	// +optional
 	MaxParallel int `json:"maxParallel,omitempty"`
+
+	// PersistentConnection keeps one S3 client open in the plugin process and
+	// reuses it for WAL restore. Leave it unset to start barman-cloud-wal-restore
+	// for every file. The open client is used only for S3, and only when WAL
+	// compression is gzip or unset. Encryption and restoreAdditionalCommandArgs
+	// stay on the barman-cloud-wal-restore path.
+	// +optional
+	PersistentConnection bool `json:"persistentConnection,omitempty"`
+
+	// Prefetch is the number of WAL segments after the requested one to
+	// download into the spool without making the requested segment wait.
+	// When unset, maxParallel keeps its current behavior: the requested
+	// segment is returned only after every parallel download finishes.
+	// +kubebuilder:validation:Minimum=1
+	// +optional
+	Prefetch int `json:"prefetch,omitempty"`
+
 	// Additional arguments that can be appended to the 'barman-cloud-wal-archive'
 	// command-line invocation. These arguments provide flexibility to customize
 	// the WAL archive process further, according to specific requirements or configurations.
