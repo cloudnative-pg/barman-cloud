@@ -65,6 +65,9 @@ type WALRestorer struct {
 
 	// The environment that should be used to invoke barman-cloud-wal-archive
 	env []string
+
+	// persistent reuses one object-store client. Nil keeps the barman-cloud-wal-restore path.
+	persistent *persistentClient
 }
 
 // Result is the structure filled by the restore process on completion
@@ -121,6 +124,25 @@ func (restorer *WALRestorer) RestoreFromSpool(walName, destinationPath string) (
 	default:
 		return true, nil
 	}
+}
+
+// PrefetchIntoSpool downloads one regular WAL segment into the spool.
+// The segment is renamed into place only after the download succeeds, so a
+// reader never observes a partial file. ErrWALNotFound means the object is
+// not in the archive yet.
+func (restorer *WALRestorer) PrefetchIntoSpool(walName string, options []string) error {
+	if !isWALSegment(walName) {
+		return fmt.Errorf("invalid name for a WAL file %q: %w", walName, ErrInvalidWALName)
+	}
+	ready, err := restorer.spool.Contains(walName)
+	if err != nil || ready {
+		return err
+	}
+	if err := restorer.Restore(walName, restorer.spool.TempFileName(walName), options); err != nil {
+		restorer.spool.CleanupTemp(walName)
+		return err
+	}
+	return restorer.spool.Commit(walName)
 }
 
 // SetEndOfWALStream add end-of-wal-stream in the spool directory
@@ -294,6 +316,10 @@ func (restorer *WALRestorer) Restore(
 	if optionsLength >= math.MaxInt-2 {
 		return fmt.Errorf("can't restore wal file %v, options too long", walName)
 	}
+	if restorer.persistent != nil && isWALSegment(walName) {
+		return restorer.persistent.restore(walName, destinationPath)
+	}
+
 	options := make([]string, optionsLength, optionsLength+2)
 	copy(options, baseOptions)
 	options = append(options, walName, destinationPath)
