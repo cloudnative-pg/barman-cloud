@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.7.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.6.0...v0.7.0) (2026-10-09)
+
+
+### Features
+
+* **api:** add `s3AddressingStyle` for S3-compatible stores ([#288](https://github.com/cloudnative-pg/barman-cloud/issues/288)) ([603c484](https://github.com/cloudnative-pg/barman-cloud/commit/603c4849d2d92726520029894fc27296b7536e34))
+* **backup:** allow zstd compression for base backups ([#310](https://github.com/cloudnative-pg/barman-cloud/issues/310)) ([406497e](https://github.com/cloudnative-pg/barman-cloud/commit/406497ed9514f273b2491f35a9eacb0fc9524054)), refs [#305](https://github.com/cloudnative-pg/barman-cloud/issues/305)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major go dependencies ([#300](https://github.com/cloudnative-pg/barman-cloud/issues/300)) ([8785d26](https://github.com/cloudnative-pg/barman-cloud/commit/8785d26f1d41eddeb4eec1ffcd74af407f2e2378))
+* **deps:** update kubernetes monorepo to v0.37.1 ([#307](https://github.com/cloudnative-pg/barman-cloud/issues/307)) ([7dc3f53](https://github.com/cloudnative-pg/barman-cloud/commit/7dc3f53954c82990cb8618b90fb3c54f35f0e34a))
+* **deps:** update module sigs.k8s.io/controller-runtime to v0.25.1 ([#299](https://github.com/cloudnative-pg/barman-cloud/issues/299)) ([71f2898](https://github.com/cloudnative-pg/barman-cloud/commit/71f289838b98ad979178a87b690129f8e1c9ac63))
+* **deps:** update module sigs.k8s.io/controller-runtime to v0.25.2 ([#312](https://github.com/cloudnative-pg/barman-cloud/issues/312)) ([f388bd5](https://github.com/cloudnative-pg/barman-cloud/commit/f388bd599185f7b983a83a24b97ff3f8aca72cb1))
+* require a strict majority to pass a gitvote vote ([#302](https://github.com/cloudnative-pg/barman-cloud/issues/302)) ([cb94acf](https://github.com/cloudnative-pg/barman-cloud/commit/cb94acf8ae640563a7fce4f12e6843943428f7f7))
+
 ## [0.6.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.5.1...v0.6.0) (2026-09-02)
 
 
