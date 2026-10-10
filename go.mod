@@ -5,10 +5,10 @@ go 1.26.0
 toolchain go1.27.2
 
 require (
-	github.com/cloudnative-pg/machinery v0.6.0
-	github.com/onsi/ginkgo/v2 v2.33.0
+	github.com/cloudnative-pg/machinery v0.6.1
+	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.44.0
-	golang.org/x/sys v0.48.0
+	golang.org/x/sys v0.49.0
 	k8s.io/api v0.37.1
 	k8s.io/apimachinery v0.37.1
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3
