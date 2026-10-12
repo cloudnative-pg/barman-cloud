@@ -269,7 +269,7 @@ type BarmanBackup struct {
 	// The moment where the backup ended in ISO format
 	EndTimeISOString string `json:"end_time_iso"`
 
-	// The moment where the backup ended
+	// The moment where the backup started
 	BeginTime time.Time
 
 	// The moment where the backup ended
@@ -370,7 +370,7 @@ func parseTimeWithFallbackLayout(value string, primaryLayout string, fallbackLay
 }
 
 func (b *BarmanBackup) isBackupDone() bool {
-	return !b.BeginTime.IsZero() && !b.EndTime.IsZero()
+	return !b.BeginTime.IsZero() && !b.EndTime.IsZero() && b.Error == ""
 }
 
 // NewCatalog creates a new sorted backup catalog, given a list of backup infos
