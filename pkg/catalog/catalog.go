@@ -269,7 +269,7 @@ type BarmanBackup struct {
 	// The moment where the backup ended in ISO format
 	EndTimeISOString string `json:"end_time_iso"`
 
-	// The moment where the backup ended
+	// The moment where the backup started
 	BeginTime time.Time
 
 	// The moment where the backup ended
