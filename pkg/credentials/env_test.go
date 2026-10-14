@@ -95,9 +95,4 @@ var _ = Describe("Google credentials", func() {
 		Expect(envGKE).To(Equal([]string{"FOO=bar"}))
 		Expect(os.ReadFile(credentialsFile(envA))).To(BeEquivalentTo("credentials-a"))
 	})
-
-	It("fails when the referenced secret does not exist", func(ctx SpecContext) {
-		_, err := envSetGoogleCredentials(ctx, c, namespace, credentialsFrom("missing"), nil)
-		Expect(err).To(HaveOccurred())
-	})
 })

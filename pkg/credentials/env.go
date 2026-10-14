@@ -289,16 +289,13 @@ func envSetAzureCredentials(
 	return env, nil
 }
 
-// googleCredentialsDirectory is where the Google application credentials are
-// materialized from their secrets. It is a variable so that tests can
-// redirect it.
+// googleCredentialsDirectory holds the credentials files. It is a variable
+// so tests can change it.
 var googleCredentialsDirectory = path.Join(ScratchDataDirectory, ".google-credentials")
 
-// googleCredentialsMutex serializes the writes of the Google application
-// credentials files. fileutils.WriteFileAtomic names its temporary file after
-// the current second, so two concurrent writes of the same file would share
-// it, and one of them could truncate the file the other has just renamed
-// into place.
+// googleCredentialsMutex serializes the writes, because WriteFileAtomic
+// names its temporary file after the current second. Remove it once
+// cloudnative-pg/machinery#325 is released.
 var googleCredentialsMutex sync.Mutex
 
 func envSetGoogleCredentials(
@@ -323,11 +320,8 @@ func envSetGoogleCredentials(
 		return nil, err
 	}
 
-	// The file path depends on the referenced secret and key: a single
-	// process can serve object stores with different credentials
-	// concurrently (e.g. a replica cluster archiving to its own object store
-	// while restoring from the source one), and a shared file would let a
-	// command run with the credentials of another object store.
+	// One file per secret key: object stores with different credentials can
+	// run in the same process at the same time.
 	credentialsPath := path.Join(
 		googleCredentialsDirectory,
 		googleCredentials.ApplicationCredentials.Name,
