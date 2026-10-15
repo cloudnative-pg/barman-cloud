@@ -25,6 +25,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/cloudnative-pg/machinery/pkg/fileutils"
 	"github.com/cloudnative-pg/machinery/pkg/log"
@@ -76,6 +77,25 @@ func (spool *WALSpool) Remove(walFile string) error {
 		return ErrorNonExistentFile
 	}
 	return err
+}
+
+// RemoveByPrefix removes every file in the spool whose name starts with the
+// given prefix. It is not an error if no file matches.
+func (spool *WALSpool) RemoveByPrefix(prefix string) error {
+	entries, err := os.ReadDir(spool.spoolDirectory)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		if !strings.HasPrefix(entry.Name(), prefix) {
+			continue
+		}
+		if err := os.Remove(path.Join(spool.spoolDirectory, entry.Name())); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+	return nil
 }
 
 // Touch ensure that a certain WAL file is included into the spool as an empty file
