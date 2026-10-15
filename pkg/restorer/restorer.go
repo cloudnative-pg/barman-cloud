@@ -231,6 +231,17 @@ func (restorer *WALRestorer) isEndOfWALStream(flagName string) (bool, error) {
 	return isEOS, nil
 }
 
+// ClearEndOfWALStream removes the end-of-wal-stream markers of every WAL
+// timeline, including the legacy timeline-agnostic one. Unlike
+// ConsumeEndOfWALStreamForWAL it does not depend on a WAL name, so it fits
+// callers that must discard markers they did not set (e.g. pg_rewind).
+func (restorer *WALRestorer) ClearEndOfWALStream() error {
+	if err := restorer.spool.RemoveByPrefix(endOfWALStreamFlagFilename); err != nil {
+		return fmt.Errorf("failed to remove end-of-wal-stream markers: %w", err)
+	}
+	return nil
+}
+
 // ResetEndOfWalStream remove end-of-wal-stream flag from the spool directory.
 //
 // Deprecated: use ConsumeEndOfWALStreamForWAL to avoid sharing the same

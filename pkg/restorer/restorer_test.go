@@ -156,6 +156,41 @@ var _ = Describe("ConsumeEndOfWALStreamForWAL", func() {
 	})
 })
 
+var _ = Describe("ClearEndOfWALStream", func() {
+	var (
+		spoolDirectory string
+		restorer       *WALRestorer
+	)
+
+	BeforeEach(func() {
+		spoolDirectory = GinkgoT().TempDir()
+		var err error
+		restorer, err = New(context.Background(), nil, spoolDirectory)
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("removes the legacy and every timeline marker, and nothing else", func() {
+		Expect(restorer.SetEndOfWALStream()).To(Succeed())
+		_, err := restorer.SetEndOfWALStreamFromResults([]Result{
+			{WalName: "000000010000000000000002", Err: ErrWALNotFound},
+			{WalName: "000000020000000000000002", Err: ErrWALNotFound},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(os.WriteFile(filepath.Join(spoolDirectory, "000000010000000000000003"), nil, 0o600)).To(Succeed())
+
+		Expect(restorer.ClearEndOfWALStream()).To(Succeed())
+
+		entries, err := os.ReadDir(spoolDirectory)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(entries).To(HaveLen(1))
+		Expect(entries[0].Name()).To(Equal("000000010000000000000003"))
+	})
+
+	It("succeeds when there is no marker", func() {
+		Expect(restorer.ClearEndOfWALStream()).To(Succeed())
+	})
+})
+
 var _ = Describe("errorForExitCode", func() {
 	const walName = "000000010000000000000001"
 
