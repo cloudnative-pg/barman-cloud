@@ -109,18 +109,13 @@ type S3Credentials struct {
 	// +optional
 	SessionToken *machineryapi.SecretKeySelector `json:"sessionToken,omitempty"`
 
-	// The reference to the secret containing the key for
-	// Server-Side Encryption with Customer-provided keys (SSE-C).
-	// When set, every object barman-cloud uploads to and downloads from
-	// S3 is encrypted with this key using the AWS SSE-C protocol
-	// (the `--sse-customer-key` barman-cloud option).
-	// The referenced value must be a base64-encoded 256-bit (32-byte)
-	// AES key. This is meant for S3-compatible providers that only
-	// support customer-provided keys (e.g. Hetzner Object Storage) and
-	// cannot be combined with the bucket-managed `encryption` field
-	// (SSE-S3/SSE-KMS), which barman-cloud rejects together with SSE-C.
-	// It can be combined with any authentication method, including
-	// inheritFromIAMRole.
+	// Reference to the secret holding the key for Server-Side Encryption with
+	// Customer-provided keys (SSE-C): a base64-encoded 256-bit AES key.
+	// barman-cloud uses it to encrypt the objects it uploads and to read them
+	// back. Meant for S3-compatible providers that only support SSE-C
+	// (e.g. Hetzner Object Storage). Cannot be combined with `encryption`.
+	// Works with any authentication method. Changing the key makes the
+	// existing objects unreadable: use a new `destinationPath` or `serverName`.
 	// +optional
 	SSECustomerKey *machineryapi.SecretKeySelector `json:"sseCustomerKey,omitempty"`
 
