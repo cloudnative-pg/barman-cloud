@@ -380,6 +380,63 @@ func (crendentials BarmanCredentials) ArePopulated() bool {
 	return crendentials.Azure != nil || crendentials.AWS != nil || crendentials.Google != nil
 }
 
+// SecretNames returns the names of the secrets referenced by the credentials.
+// Consumers use it to grant access to those secrets, so every field of type
+// SecretKeySelector must be listed here.
+func (crendentials BarmanCredentials) SecretNames() []string {
+	return slices.Concat(
+		crendentials.AWS.SecretNames(),
+		crendentials.Azure.SecretNames(),
+		crendentials.Google.SecretNames(),
+	)
+}
+
+// SecretNames returns the names of the secrets referenced by the S3 credentials
+func (s3 *S3Credentials) SecretNames() []string {
+	if s3 == nil {
+		return nil
+	}
+	return secretNames(
+		s3.AccessKeyIDReference,
+		s3.SecretAccessKeyReference,
+		s3.RegionReference,
+		s3.SessionToken,
+		s3.SSECustomerKey,
+	)
+}
+
+// SecretNames returns the names of the secrets referenced by the Azure credentials
+func (azure *AzureCredentials) SecretNames() []string {
+	// The default credentials and the managed identity need no secrets
+	if azure == nil || azure.UseDefaultAzureCredentials || azure.InheritFromAzureAD {
+		return nil
+	}
+	return secretNames(
+		azure.ConnectionString,
+		azure.StorageAccount,
+		azure.StorageKey,
+		azure.StorageSasToken,
+	)
+}
+
+// SecretNames returns the names of the secrets referenced by the Google credentials
+func (gcs *GoogleCredentials) SecretNames() []string {
+	if gcs == nil {
+		return nil
+	}
+	return secretNames(gcs.ApplicationCredentials)
+}
+
+func secretNames(references ...*machineryapi.SecretKeySelector) []string {
+	names := make([]string, 0, len(references))
+	for _, reference := range references {
+		if reference != nil {
+			names = append(names, reference.Name)
+		}
+	}
+	return names
+}
+
 // ValidateAzureCredentials checks and validates the azure credentials
 func (azure *AzureCredentials) ValidateAzureCredentials(path *field.Path) field.ErrorList {
 	allErrors := field.ErrorList{}
