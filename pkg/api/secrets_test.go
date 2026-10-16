@@ -68,6 +68,21 @@ var _ = Describe("Credentials secret names", func() {
 		Expect(credentials.SecretNames()).To(BeEmpty())
 	})
 
+	It("lists no Azure secret when the default credentials are used", func() {
+		credentials := &AzureCredentials{UseDefaultAzureCredentials: true}
+		referencingAllSecrets(credentials)
+		Expect(credentials.SecretNames()).To(BeEmpty())
+	})
+
+	It("skips the unset references", func() {
+		credentials := &S3Credentials{
+			AccessKeyIDReference: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{Name: "access-key"},
+			},
+		}
+		Expect(credentials.SecretNames()).To(ConsistOf("access-key"))
+	})
+
 	It("lists every secret referenced by the Google credentials", func() {
 		credentials := &GoogleCredentials{}
 		names := referencingAllSecrets(credentials)
