@@ -145,10 +145,9 @@ func envSetAWSCredentials(
 		return nil, fmt.Errorf("missing S3 credentials")
 	}
 
-	// Materialize the SSE-C customer key, if any, before the auth-method
-	// handling below: SSE-C is orthogonal to authentication and must be
-	// available for every method, including inheritFromIAMRole.
-	if err := reconcileAWSSSECustomerKey(ctx, client, namespace, s3credentials); err != nil {
+	// SSE-C is independent of the auth method: write the key before the
+	// inheritFromIAMRole early return
+	if err := writeAWSSSECustomerKey(ctx, client, namespace, s3credentials); err != nil {
 		return nil, err
 	}
 
@@ -221,17 +220,10 @@ func envSetAWSCredentials(
 // so tests can change it.
 var sseCustomerKeysDirectory = utils.SSECustomerKeysDirectory
 
-// reconcileAWSSSECustomerKey materializes the S3 SSE-C customer key file
-// referenced by the S3 credentials. barman-cloud consumes it through the
-// '--sse-customer-key file://' option, so the key must exist on disk next to
-// the process that runs the barman-cloud commands. The file path depends on
-// the referenced secret and key: a single process can serve object stores
-// with different keys concurrently (e.g. a replica cluster archiving to its
-// own object store while restoring from the source one), and a shared file
-// would let a command pick up the key of another object store. The
-// referenced secret is expected to contain a base64-encoded 256-bit AES key,
-// which barman-cloud validates when it reads the file.
-func reconcileAWSSSECustomerKey(
+// writeAWSSSECustomerKey writes the SSE-C key to its file, for the
+// '--sse-customer-key file://' option. One process can serve several object
+// stores (e.g. a replica cluster), so each key gets its own file.
+func writeAWSSSECustomerKey(
 	ctx context.Context,
 	c client.Client,
 	namespace string,

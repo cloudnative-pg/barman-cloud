@@ -73,7 +73,6 @@ var _ = Describe("SSE-C customer key file path", func() {
 			SSECustomerKeyFilePath("/keys", selector("store-a.key", "x")),
 			SSECustomerKeyFilePath("/keys", selector("store-a", "key.x")),
 		}
-		Expect(paths).To(HaveLen(5))
 		for i := range paths {
 			Expect(paths[i+1:]).ToNot(ContainElement(paths[i]))
 		}

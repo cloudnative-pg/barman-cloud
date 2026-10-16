@@ -67,10 +67,9 @@ func MapToBarmanTagsFormat(option string, mapTags map[string]string) ([]string, 
 	return tags, nil
 }
 
-// SSECustomerKeyFilePath returns the path, inside the passed directory, where
-// the S3 SSE-C customer key referenced by the passed selector is materialized. The path depends on the
-// referenced secret and key, so that object stores using different keys
-// never share the same file, even when their commands run concurrently.
+// SSECustomerKeyFilePath returns the key file path for the selector, inside
+// the directory. It includes the secret name and key, so object stores with
+// different keys never share a file.
 func SSECustomerKeyFilePath(directory string, selector *machineryapi.SecretKeySelector) string {
 	return path.Join(directory, selector.Name, selector.Key)
 }

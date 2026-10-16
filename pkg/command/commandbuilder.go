@@ -98,9 +98,6 @@ func appendCloudProviderOptions(
 			"--cloud-provider",
 			"aws-s3")
 
-		// When Server-Side Encryption with Customer-provided keys (SSE-C)
-		// is configured, point barman-cloud at the key file that the
-		// credentials package materializes from the referenced secret.
 		if credentials.AWS.SSECustomerKey != nil {
 			options = append(
 				options,

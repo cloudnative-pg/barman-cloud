@@ -44,8 +44,6 @@ const (
 	// BarmanCloudCheckWalArchive is the command name for 'barman-cloud-check-wal-archive'
 	BarmanCloudCheckWalArchive = "barman-cloud-check-wal-archive"
 
-	// SSECustomerKeysDirectory is the directory where the S3 SSE-C customer
-	// keys are materialized from their secrets so that they can be passed to
-	// the barman-cloud commands via the '--sse-customer-key file://' option.
+	// SSECustomerKeysDirectory is where the SSE-C key files are written
 	SSECustomerKeysDirectory = "/controller/.sse-customer-keys"
 )

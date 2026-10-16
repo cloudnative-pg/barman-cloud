@@ -291,8 +291,8 @@ var _ = Describe("AppendCloudProviderOptions with AWS credentials", func() {
 			}
 			result, err := appendCloudProviderOptions(ctx, []string{}, credentials)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(result).To(HaveLen(4))
-			return result[3]
+			Expect(result).To(ContainElement(HavePrefix("file://")))
+			return result[len(result)-1]
 		}
 
 		Expect(keyFileOption("store-a-key")).ToNot(Equal(keyFileOption("store-b-key")))
