@@ -23,7 +23,6 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"sync"
 
 	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 	"github.com/cloudnative-pg/machinery/pkg/fileutils"
@@ -328,11 +327,6 @@ func envSetAzureCredentials(
 // so tests can change it.
 var googleCredentialsDirectory = path.Join(ScratchDataDirectory, ".google-credentials")
 
-// googleCredentialsMutex serializes the writes, because WriteFileAtomic
-// names its temporary file after the current second. Remove it once
-// cloudnative-pg/machinery#325 is released.
-var googleCredentialsMutex sync.Mutex
-
 func envSetGoogleCredentials(
 	ctx context.Context,
 	c client.Client,
@@ -363,8 +357,6 @@ func envSetGoogleCredentials(
 		googleCredentials.ApplicationCredentials.Key,
 	)
 
-	googleCredentialsMutex.Lock()
-	defer googleCredentialsMutex.Unlock()
 	if _, err := fileutils.WriteFileAtomic(credentialsPath, applicationCredentialsContent, 0o600); err != nil {
 		return nil, err
 	}
