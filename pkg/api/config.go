@@ -109,6 +109,16 @@ type S3Credentials struct {
 	// +optional
 	SessionToken *machineryapi.SecretKeySelector `json:"sessionToken,omitempty"`
 
+	// Reference to the secret holding the key for Server-Side Encryption with
+	// Customer-provided keys (SSE-C): a base64-encoded 256-bit AES key.
+	// barman-cloud uses it to encrypt the objects it uploads and to read them
+	// back. Meant for S3-compatible providers that only support SSE-C
+	// (e.g. Hetzner Object Storage). Cannot be combined with `encryption`.
+	// Works with any authentication method. Changing the key makes the
+	// existing objects unreadable: use a new `destinationPath` or `serverName`.
+	// +optional
+	SSECustomerKey *machineryapi.SecretKeySelector `json:"sseCustomerKey,omitempty"`
+
 	// Use the role based authentication without providing explicitly the keys.
 	// +optional
 	InheritFromIAMRole bool `json:"inheritFromIAMRole,omitempty"`
@@ -368,6 +378,63 @@ type DataBackupConfiguration struct {
 // something
 func (crendentials BarmanCredentials) ArePopulated() bool {
 	return crendentials.Azure != nil || crendentials.AWS != nil || crendentials.Google != nil
+}
+
+// SecretNames returns the names of the secrets referenced by the credentials.
+// Consumers use it to grant access to those secrets, so every field of type
+// SecretKeySelector must be listed here.
+func (crendentials BarmanCredentials) SecretNames() []string {
+	return slices.Concat(
+		crendentials.AWS.SecretNames(),
+		crendentials.Azure.SecretNames(),
+		crendentials.Google.SecretNames(),
+	)
+}
+
+// SecretNames returns the names of the secrets referenced by the S3 credentials
+func (s3 *S3Credentials) SecretNames() []string {
+	if s3 == nil {
+		return nil
+	}
+	return secretNames(
+		s3.AccessKeyIDReference,
+		s3.SecretAccessKeyReference,
+		s3.RegionReference,
+		s3.SessionToken,
+		s3.SSECustomerKey,
+	)
+}
+
+// SecretNames returns the names of the secrets referenced by the Azure credentials
+func (azure *AzureCredentials) SecretNames() []string {
+	// The default credentials and the managed identity need no secrets
+	if azure == nil || azure.UseDefaultAzureCredentials || azure.InheritFromAzureAD {
+		return nil
+	}
+	return secretNames(
+		azure.ConnectionString,
+		azure.StorageAccount,
+		azure.StorageKey,
+		azure.StorageSasToken,
+	)
+}
+
+// SecretNames returns the names of the secrets referenced by the Google credentials
+func (gcs *GoogleCredentials) SecretNames() []string {
+	if gcs == nil {
+		return nil
+	}
+	return secretNames(gcs.ApplicationCredentials)
+}
+
+func secretNames(references ...*machineryapi.SecretKeySelector) []string {
+	names := make([]string, 0, len(references))
+	for _, reference := range references {
+		if reference != nil {
+			names = append(names, reference.Name)
+		}
+	}
+	return names
 }
 
 // ValidateAzureCredentials checks and validates the azure credentials

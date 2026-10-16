@@ -43,4 +43,7 @@ const (
 
 	// BarmanCloudCheckWalArchive is the command name for 'barman-cloud-check-wal-archive'
 	BarmanCloudCheckWalArchive = "barman-cloud-check-wal-archive"
+
+	// SSECustomerKeysDirectory is where the SSE-C key files are written
+	SSECustomerKeysDirectory = "/controller/.sse-customer-keys"
 )

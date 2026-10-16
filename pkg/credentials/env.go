@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 const (
@@ -144,6 +145,12 @@ func envSetAWSCredentials(
 		return nil, fmt.Errorf("missing S3 credentials")
 	}
 
+	// SSE-C is independent of the auth method: write the key before the
+	// inheritFromIAMRole early return
+	if err := writeAWSSSECustomerKey(ctx, client, namespace, s3credentials); err != nil {
+		return nil, err
+	}
+
 	if s3credentials.InheritFromIAMRole {
 		return env, nil
 	}
@@ -207,6 +214,34 @@ func envSetAWSCredentials(
 	env = append(env, fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", secretAccessKey))
 
 	return env, nil
+}
+
+// sseCustomerKeysDirectory holds the SSE-C key files. It is a variable
+// so tests can change it.
+var sseCustomerKeysDirectory = utils.SSECustomerKeysDirectory
+
+// writeAWSSSECustomerKey writes the SSE-C key to its file, for the
+// '--sse-customer-key file://' option. One process can serve several object
+// stores (e.g. a replica cluster), so each key gets its own file.
+func writeAWSSSECustomerKey(
+	ctx context.Context,
+	c client.Client,
+	namespace string,
+	s3credentials *barmanApi.S3Credentials,
+) error {
+	if s3credentials.SSECustomerKey == nil {
+		return nil
+	}
+
+	key, err := extractValueFromSecret(ctx, c, s3credentials.SSECustomerKey, namespace)
+	if err != nil {
+		return err
+	}
+
+	_, err = fileutils.WriteFileAtomic(
+		utils.SSECustomerKeyFilePath(sseCustomerKeysDirectory, s3credentials.SSECustomerKey), key, 0o600)
+
+	return err
 }
 
 // envSetAzureCredentials sets the Azure environment variables given the configuration

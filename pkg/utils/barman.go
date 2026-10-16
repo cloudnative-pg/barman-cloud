@@ -23,7 +23,10 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"path"
 	"regexp"
+
+	machineryapi "github.com/cloudnative-pg/machinery/pkg/api"
 )
 
 var regexPolicy = regexp.MustCompile(`([1-9][0-9]*)([dwm])$`)
@@ -62,4 +65,11 @@ func MapToBarmanTagsFormat(option string, mapTags map[string]string) ([]string, 
 	}
 
 	return tags, nil
+}
+
+// SSECustomerKeyFilePath returns the key file path for the selector, inside
+// the directory. It includes the secret name and key, so object stores with
+// different keys never share a file.
+func SSECustomerKeyFilePath(directory string, selector *machineryapi.SecretKeySelector) string {
+	return path.Join(directory, selector.Name, selector.Key)
 }

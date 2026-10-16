@@ -23,6 +23,7 @@ import (
 	"context"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 )
 
 // CloudWalRestoreOptions returns the options needed to execute the barman command successfully
@@ -96,6 +97,13 @@ func appendCloudProviderOptions(
 			options,
 			"--cloud-provider",
 			"aws-s3")
+
+		if credentials.AWS.SSECustomerKey != nil {
+			options = append(
+				options,
+				"--sse-customer-key",
+				"file://"+utils.SSECustomerKeyFilePath(utils.SSECustomerKeysDirectory, credentials.AWS.SSECustomerKey))
+		}
 	case credentials.Azure != nil:
 		options = append(
 			options,
