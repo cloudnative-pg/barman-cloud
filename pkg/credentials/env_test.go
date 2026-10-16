@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	barmanApi "github.com/cloudnative-pg/barman-cloud/pkg/api"
+	"github.com/cloudnative-pg/barman-cloud/pkg/utils"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -94,5 +95,55 @@ var _ = Describe("Google credentials", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(envGKE).To(Equal([]string{"FOO=bar"}))
 		Expect(os.ReadFile(credentialsFile(envA))).To(BeEquivalentTo("credentials-a"))
+	})
+})
+
+var _ = Describe("S3 SSE-C customer key", func() {
+	const namespace = "default"
+	var c client.Client
+
+	credentialsFrom := func(secretName, key string) *barmanApi.S3Credentials {
+		return &barmanApi.S3Credentials{
+			InheritFromIAMRole: true,
+			SSECustomerKey: &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{Name: secretName},
+				Key:                  key,
+			},
+		}
+	}
+
+	BeforeEach(func() {
+		previousDirectory := sseCustomerKeysDirectory
+		sseCustomerKeysDirectory = GinkgoT().TempDir()
+		DeferCleanup(func() { sseCustomerKeysDirectory = previousDirectory })
+
+		newSecret := func(name, content string) *corev1.Secret {
+			return &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+				Data:       map[string][]byte{"key": []byte(content)},
+			}
+		}
+		c = fake.NewClientBuilder().WithObjects(
+			newSecret("store-a", "key-a"),
+			newSecret("store-b", "key-b"),
+		).Build()
+	})
+
+	It("keeps the key of each object store in its own file, with any auth method", func(ctx SpecContext) {
+		credentialsA, credentialsB := credentialsFrom("store-a", "key"), credentialsFrom("store-b", "key")
+		_, err := envSetAWSCredentials(ctx, c, namespace, credentialsA, nil)
+		Expect(err).ToNot(HaveOccurred())
+		_, err = envSetAWSCredentials(ctx, c, namespace, credentialsB, nil)
+		Expect(err).ToNot(HaveOccurred())
+
+		fileA := utils.SSECustomerKeyFilePath(sseCustomerKeysDirectory, credentialsA.SSECustomerKey)
+		fileB := utils.SSECustomerKeyFilePath(sseCustomerKeysDirectory, credentialsB.SSECustomerKey)
+		Expect(os.ReadFile(fileA)).To(BeEquivalentTo("key-a")) // #nosec G304
+		Expect(os.ReadFile(fileB)).To(BeEquivalentTo("key-b")) // #nosec G304
+	})
+
+	It("fails when the key is missing from the secret", func(ctx SpecContext) {
+		_, err := envSetAWSCredentials(ctx, c, namespace, credentialsFrom("store-a", "missing"), nil)
+		Expect(err).To(MatchError(ContainSubstring("missing key missing")))
 	})
 })

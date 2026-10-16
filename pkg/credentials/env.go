@@ -217,6 +217,10 @@ func envSetAWSCredentials(
 	return env, nil
 }
 
+// sseCustomerKeysDirectory holds the SSE-C key files. It is a variable
+// so tests can change it.
+var sseCustomerKeysDirectory = utils.SSECustomerKeysDirectory
+
 // reconcileAWSSSECustomerKey materializes the S3 SSE-C customer key file
 // referenced by the S3 credentials. barman-cloud consumes it through the
 // '--sse-customer-key file://' option, so the key must exist on disk next to
@@ -243,7 +247,7 @@ func reconcileAWSSSECustomerKey(
 	}
 
 	_, err = fileutils.WriteFileAtomic(
-		utils.SSECustomerKeyFilePath(s3credentials.SSECustomerKey), key, 0o600)
+		utils.SSECustomerKeyFilePath(sseCustomerKeysDirectory, s3credentials.SSECustomerKey), key, 0o600)
 
 	return err
 }

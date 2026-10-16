@@ -67,11 +67,11 @@ var _ = Describe("SSE-C customer key file path", func() {
 
 	It("never shares a file between different secret keys", func() {
 		paths := []string{
-			SSECustomerKeyFilePath(selector("store-a", "key")),
-			SSECustomerKeyFilePath(selector("store-b", "key")),
-			SSECustomerKeyFilePath(selector("store-a", "other")),
-			SSECustomerKeyFilePath(selector("store-a.key", "x")),
-			SSECustomerKeyFilePath(selector("store-a", "key.x")),
+			SSECustomerKeyFilePath("/keys", selector("store-a", "key")),
+			SSECustomerKeyFilePath("/keys", selector("store-b", "key")),
+			SSECustomerKeyFilePath("/keys", selector("store-a", "other")),
+			SSECustomerKeyFilePath("/keys", selector("store-a.key", "x")),
+			SSECustomerKeyFilePath("/keys", selector("store-a", "key.x")),
 		}
 		Expect(paths).To(HaveLen(5))
 		for i := range paths {
