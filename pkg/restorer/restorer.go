@@ -245,7 +245,7 @@ func (restorer *WALRestorer) ClearEndOfWALStream() error {
 // ResetEndOfWalStream remove end-of-wal-stream flag from the spool directory.
 //
 // Deprecated: use ConsumeEndOfWALStreamForWAL to avoid sharing the same
-// marker across WAL timelines.
+// marker across WAL timelines, or ClearEndOfWALStream to discard every marker.
 func (restorer *WALRestorer) ResetEndOfWalStream() error {
 	return restorer.resetEndOfWalStream(endOfWALStreamFlagFilename)
 }
