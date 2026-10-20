@@ -20,12 +20,207 @@ SPDX-License-Identifier: Apache-2.0
 package restorer
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+var _ = Describe("SetEndOfWALStreamFromResults", func() {
+	var (
+		spoolDirectory string
+		restorer       *WALRestorer
+	)
+
+	BeforeEach(func() {
+		spoolDirectory = GinkgoT().TempDir()
+		var err error
+		restorer, err = New(context.Background(), nil, spoolDirectory)
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("sets a timeline-scoped marker for missing regular WAL restore results", func() {
+		contains, err := restorer.SetEndOfWALStreamFromResults([]Result{
+			{WalName: "000000010000000000000002", Err: ErrWALNotFound},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeTrue())
+
+		Expect(filepath.Join(spoolDirectory, "end-of-wal-stream-00000001")).To(BeAnExistingFile())
+	})
+
+	It("is idempotent when setting a timeline marker", func() {
+		for range 2 {
+			contains, err := restorer.SetEndOfWALStreamFromResults([]Result{
+				{WalName: "000000010000000000000002", Err: ErrWALNotFound},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(contains).To(BeTrue())
+		}
+
+		entries, err := os.ReadDir(spoolDirectory)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(entries).To(HaveLen(1))
+		Expect(entries[0].Name()).To(Equal("end-of-wal-stream-00000001"))
+	})
+
+	It("does not set markers for missing non-WAL restore results", func() {
+		contains, err := restorer.SetEndOfWALStreamFromResults([]Result{
+			{WalName: "00000002.history", Err: ErrWALNotFound},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeFalse())
+
+		entries, err := os.ReadDir(spoolDirectory)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(entries).To(BeEmpty())
+	})
+
+	// Restore wraps the sentinels. Only a missing WAL sets a marker.
+	It("sets markers only for missing WAL files, as reported by Restore", func() {
+		contains, err := restorer.SetEndOfWALStreamFromResults([]Result{
+			{WalName: "000000010000000000000002", Err: errorForExitCode(2, "000000010000000000000002")},
+			{WalName: "000000020000000000000002", Err: errorForExitCode(4, "000000020000000000000002")},
+			{WalName: "0000000A0000000000000002", Err: errorForExitCode(1, "0000000A0000000000000002")},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeTrue())
+
+		entries, err := os.ReadDir(spoolDirectory)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(entries).To(HaveLen(1))
+		Expect(entries[0].Name()).To(Equal("end-of-wal-stream-0000000A"))
+	})
+})
+
+var _ = Describe("ConsumeEndOfWALStreamForWAL", func() {
+	var (
+		spoolDirectory string
+		restorer       *WALRestorer
+	)
+
+	BeforeEach(func() {
+		spoolDirectory = GinkgoT().TempDir()
+		var err error
+		restorer, err = New(context.Background(), nil, spoolDirectory)
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("consumes only the requested WAL timeline marker", func() {
+		contains, err := restorer.SetEndOfWALStreamFromResults([]Result{
+			{WalName: "000000010000000000000002", Err: ErrWALNotFound},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeTrue())
+
+		contains, err = restorer.ConsumeEndOfWALStreamForWAL("000000020000000000000003")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeFalse())
+		Expect(filepath.Join(spoolDirectory, "end-of-wal-stream-00000001")).To(BeAnExistingFile())
+
+		contains, err = restorer.ConsumeEndOfWALStreamForWAL("000000010000000000000003")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeTrue())
+		Expect(filepath.Join(spoolDirectory, "end-of-wal-stream-00000001")).ToNot(BeAnExistingFile())
+	})
+
+	It("removes legacy global markers without treating them as authoritative", func() {
+		Expect(restorer.SetEndOfWALStream()).To(Succeed())
+		Expect(filepath.Join(spoolDirectory, "end-of-wal-stream")).To(BeAnExistingFile())
+
+		contains, err := restorer.ConsumeEndOfWALStreamForWAL("000000010000000000000003")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeFalse())
+		Expect(filepath.Join(spoolDirectory, "end-of-wal-stream")).ToNot(BeAnExistingFile())
+	})
+
+	It("consumes markers for WAL names but not non-WAL names", func() {
+		contains, err := restorer.SetEndOfWALStreamFromResults([]Result{
+			{WalName: "000000010000000000000002", Err: ErrWALNotFound},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeTrue())
+
+		contains, err = restorer.ConsumeEndOfWALStreamForWAL("00000002.history")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeFalse())
+		Expect(filepath.Join(spoolDirectory, "end-of-wal-stream-00000001")).To(BeAnExistingFile())
+
+		contains, err = restorer.ConsumeEndOfWALStreamForWAL("000000010000000000000003")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeTrue())
+		Expect(filepath.Join(spoolDirectory, "end-of-wal-stream-00000001")).ToNot(BeAnExistingFile())
+	})
+})
+
+// The deprecated API must keep touching only the legacy marker.
+var _ = Describe("legacy end-of-wal-stream marker", func() {
+	It("is set, checked and reset independently of the timeline markers", func() {
+		restorer, err := New(context.Background(), nil, GinkgoT().TempDir())
+		Expect(err).ToNot(HaveOccurred())
+		_, err = restorer.SetEndOfWALStreamFromResults([]Result{
+			{WalName: "000000010000000000000002", Err: ErrWALNotFound},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		contains, err := restorer.IsEndOfWALStream()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeFalse())
+
+		Expect(restorer.SetEndOfWALStream()).To(Succeed())
+		contains, err = restorer.IsEndOfWALStream()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeTrue())
+
+		Expect(restorer.ResetEndOfWalStream()).To(Succeed())
+		contains, err = restorer.IsEndOfWALStream()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeFalse())
+
+		contains, err = restorer.ConsumeEndOfWALStreamForWAL("000000010000000000000003")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(contains).To(BeTrue(), "the timeline marker survives the legacy reset")
+	})
+})
+
+var _ = Describe("ClearEndOfWALStream", func() {
+	var (
+		spoolDirectory string
+		restorer       *WALRestorer
+	)
+
+	BeforeEach(func() {
+		spoolDirectory = GinkgoT().TempDir()
+		var err error
+		restorer, err = New(context.Background(), nil, spoolDirectory)
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("removes the legacy and every timeline marker, and nothing else", func() {
+		Expect(restorer.SetEndOfWALStream()).To(Succeed())
+		_, err := restorer.SetEndOfWALStreamFromResults([]Result{
+			{WalName: "000000010000000000000002", Err: ErrWALNotFound},
+			{WalName: "000000020000000000000002", Err: ErrWALNotFound},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(os.WriteFile(filepath.Join(spoolDirectory, "000000010000000000000003"), nil, 0o600)).To(Succeed())
+
+		Expect(restorer.ClearEndOfWALStream()).To(Succeed())
+
+		entries, err := os.ReadDir(spoolDirectory)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(entries).To(HaveLen(1))
+		Expect(entries[0].Name()).To(Equal("000000010000000000000003"))
+	})
+
+	It("succeeds when there is no marker", func() {
+		Expect(restorer.ClearEndOfWALStream()).To(Succeed())
+	})
+})
 
 var _ = Describe("errorForExitCode", func() {
 	const walName = "000000010000000000000001"
