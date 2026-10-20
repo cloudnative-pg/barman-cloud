@@ -43,7 +43,7 @@ const (
 	endOfWALStreamFlagPrefix   = endOfWALStreamFlagFilename + "-"
 )
 
-var walSegmentRe = regexp.MustCompile(`^([0-9A-F]{8})([0-9A-F]{8})([0-9A-F]{8})$`)
+var walSegmentRe = regexp.MustCompile(`^([0-9A-F]{8})[0-9A-F]{16}$`)
 
 // ErrWALNotFound is returned when the WAL is not found in the cloud archive
 var ErrWALNotFound = errors.New("WAL not found")
@@ -264,19 +264,14 @@ func endOfWALStreamFlagName(timeline uint32) string {
 }
 
 // timelineFromWALName extracts the timeline from a regular WAL segment file
-// name. It fails with ErrInvalidWALName for any other name (e.g. timeline
-// history or backup label files); no other error is possible.
+// name. It fails with ErrInvalidWALName for any other name.
 func timelineFromWALName(walName string) (uint32, error) {
 	subMatches := walSegmentRe.FindStringSubmatch(path.Base(walName))
-	if len(subMatches) != 4 {
+	if subMatches == nil {
 		return 0, ErrInvalidWALName
 	}
 
-	timeline, err := strconv.ParseUint(subMatches[1], 16, 32)
-	if err != nil {
-		return 0, ErrInvalidWALName
-	}
-
+	timeline, _ := strconv.ParseUint(subMatches[1], 16, 32) // 8 hex digits always fit
 	return uint32(timeline), nil
 }
 

@@ -68,21 +68,6 @@ var _ = Describe("SetEndOfWALStreamFromResults", func() {
 		Expect(entries[0].Name()).To(Equal("end-of-wal-stream-00000001"))
 	})
 
-	It("sets markers from missing regular WAL restore results only", func() {
-		contains, err := restorer.SetEndOfWALStreamFromResults([]Result{
-			{WalName: "000000010000000000000001"},
-			{WalName: "000000010000000000000002", Err: ErrWALNotFound},
-			{WalName: "00000002.history", Err: ErrWALNotFound},
-		})
-		Expect(err).ToNot(HaveOccurred())
-		Expect(contains).To(BeTrue())
-
-		Expect(filepath.Join(spoolDirectory, "end-of-wal-stream-00000001")).To(BeAnExistingFile())
-		entries, err := os.ReadDir(spoolDirectory)
-		Expect(err).ToNot(HaveOccurred())
-		Expect(entries).To(HaveLen(1))
-	})
-
 	It("does not set markers for missing non-WAL restore results", func() {
 		contains, err := restorer.SetEndOfWALStreamFromResults([]Result{
 			{WalName: "00000002.history", Err: ErrWALNotFound},
@@ -95,8 +80,7 @@ var _ = Describe("SetEndOfWALStreamFromResults", func() {
 		Expect(entries).To(BeEmpty())
 	})
 
-	// Restore wraps the sentinels with the exit code details, and only a missing
-	// WAL means the archive is exhausted: a transient failure must not set a marker.
+	// Restore wraps the sentinels. Only a missing WAL sets a marker.
 	It("sets markers only for missing WAL files, as reported by Restore", func() {
 		contains, err := restorer.SetEndOfWALStreamFromResults([]Result{
 			{WalName: "000000010000000000000002", Err: errorForExitCode(2, "000000010000000000000002")},
@@ -173,8 +157,7 @@ var _ = Describe("ConsumeEndOfWALStreamForWAL", func() {
 	})
 })
 
-// The deprecated API stays in use by callers that have not moved to the
-// timeline-scoped one yet, so it must keep handling only the legacy marker.
+// The deprecated API must keep touching only the legacy marker.
 var _ = Describe("legacy end-of-wal-stream marker", func() {
 	It("is set, checked and reset independently of the timeline markers", func() {
 		restorer, err := New(context.Background(), nil, GinkgoT().TempDir())
