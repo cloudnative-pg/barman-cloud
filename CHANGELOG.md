@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1](https://github.com/cloudnative-pg/barman-cloud/compare/v0.7.0...v0.7.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **deps:** update k8s.io/utils digest to ca04ba5 ([8be52e5](https://github.com/cloudnative-pg/barman-cloud/commit/8be52e51dd7c2c80e33a741df9df792affb82912))
+* **deps:** update kubernetes monorepo to v0.37.2 ([c248de4](https://github.com/cloudnative-pg/barman-cloud/commit/c248de4a506291c42f59f98a105cd0fe44c95427))
+
 ## [0.7.0](https://github.com/cloudnative-pg/barman-cloud/compare/v0.6.0...v0.7.0) (2026-10-20)
 
 
