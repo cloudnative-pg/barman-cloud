@@ -152,6 +152,31 @@ var _ = Describe("appendAdditionalCommandArgs", func() {
 	})
 })
 
+var _ = Describe("BarmanObjectStoreConfiguration.HasEndpointCA", func() {
+	It("is false for a nil configuration", func() {
+		var configuration *BarmanObjectStoreConfiguration
+		Expect(configuration.HasEndpointCA()).To(BeFalse())
+	})
+
+	It("is false when no CA is configured", func() {
+		Expect((&BarmanObjectStoreConfiguration{}).HasEndpointCA()).To(BeFalse())
+	})
+
+	It("is true with a Secret reference", func() {
+		configuration := &BarmanObjectStoreConfiguration{
+			EndpointCA: &machineryapi.SecretKeySelector{Key: "ca.crt"},
+		}
+		Expect(configuration.HasEndpointCA()).To(BeTrue())
+	})
+
+	It("is true with a ConfigMap reference", func() {
+		configuration := &BarmanObjectStoreConfiguration{
+			EndpointCAConfigMap: &machineryapi.ConfigMapKeySelector{Key: "ca.crt"},
+		}
+		Expect(configuration.HasEndpointCA()).To(BeTrue())
+	})
+})
+
 var _ = Describe("Barman credentials", func() {
 	It("can check when they are empty", func() {
 		Expect(BarmanCredentials{}.ArePopulated()).To(BeFalse())
