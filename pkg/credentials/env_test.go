@@ -98,6 +98,50 @@ var _ = Describe("Google credentials", func() {
 	})
 })
 
+var _ = Describe("Endpoint CA bundle", func() {
+	const (
+		namespace  = "default"
+		caLocation = "/certs/barman-ca.crt"
+	)
+	c := fake.NewClientBuilder().Build()
+
+	configMapRef := &machineryapi.ConfigMapKeySelector{
+		LocalObjectReference: machineryapi.LocalObjectReference{Name: "ca-bundle"},
+		Key:                  "ca.crt",
+	}
+	secretRef := &machineryapi.SecretKeySelector{
+		LocalObjectReference: machineryapi.LocalObjectReference{Name: "ca-secret"},
+		Key:                  "ca.crt",
+	}
+
+	DescribeTable("sets the CA bundle variable for the provider",
+		func(ctx SpecContext, configuration *barmanApi.BarmanObjectStoreConfiguration, expected string) {
+			env, err := EnvSetCloudCredentialsAndCertificates(ctx, c, namespace, configuration, nil, caLocation)
+			Expect(err).ToNot(HaveOccurred())
+			if expected == "" {
+				Expect(env).ToNot(ContainElement(HaveSuffix("_CA_BUNDLE=" + caLocation)))
+				return
+			}
+			Expect(env).To(ContainElement(expected))
+		},
+		Entry("S3 with a ConfigMap", &barmanApi.BarmanObjectStoreConfiguration{
+			BarmanCredentials:   barmanApi.BarmanCredentials{AWS: &barmanApi.S3Credentials{InheritFromIAMRole: true}},
+			EndpointCAConfigMap: configMapRef,
+		}, "AWS_CA_BUNDLE="+caLocation),
+		Entry("S3 with a Secret", &barmanApi.BarmanObjectStoreConfiguration{
+			BarmanCredentials: barmanApi.BarmanCredentials{AWS: &barmanApi.S3Credentials{InheritFromIAMRole: true}},
+			EndpointCA:        secretRef,
+		}, "AWS_CA_BUNDLE="+caLocation),
+		Entry("Azure with a ConfigMap", &barmanApi.BarmanObjectStoreConfiguration{
+			BarmanCredentials:   barmanApi.BarmanCredentials{Azure: &barmanApi.AzureCredentials{InheritFromAzureAD: true}},
+			EndpointCAConfigMap: configMapRef,
+		}, "REQUESTS_CA_BUNDLE="+caLocation),
+		Entry("S3 without a CA", &barmanApi.BarmanObjectStoreConfiguration{
+			BarmanCredentials: barmanApi.BarmanCredentials{AWS: &barmanApi.S3Credentials{InheritFromIAMRole: true}},
+		}, ""),
+	)
+})
+
 var _ = Describe("S3 SSE-C customer key", func() {
 	const namespace = "default"
 	var c client.Client

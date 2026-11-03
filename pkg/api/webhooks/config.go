@@ -80,6 +80,14 @@ func ValidateBackupConfiguration(
 		))
 	}
 
+	if barmanObjectStore.EndpointCA != nil && barmanObjectStore.EndpointCAConfigMap != nil {
+		allErrors = append(allErrors, field.Invalid(
+			path.Child("endpointCAConfigMap"),
+			barmanObjectStore.EndpointCAConfigMap,
+			"endpointCAConfigMap cannot be used together with endpointCA",
+		))
+	}
+
 	allErrors = append(allErrors, validateSSECustomerKey(barmanObjectStore, path)...)
 
 	return allErrors
