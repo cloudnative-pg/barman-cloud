@@ -98,9 +98,9 @@ func EnvSetCloudCredentialsAndCertificates(
 	env []string,
 	certificatesLocation string,
 ) ([]string, error) {
-	if configuration.EndpointCA != nil && configuration.AWS != nil {
+	if configuration.HasEndpointCA() && configuration.AWS != nil {
 		env = append(env, fmt.Sprintf("AWS_CA_BUNDLE=%s", certificatesLocation))
-	} else if configuration.EndpointCA != nil && configuration.Azure != nil {
+	} else if configuration.HasEndpointCA() && configuration.Azure != nil {
 		env = append(env, fmt.Sprintf("REQUESTS_CA_BUNDLE=%s", certificatesLocation))
 	}
 	return envSetCloudCredentials(ctx, c, namespace, configuration, env)

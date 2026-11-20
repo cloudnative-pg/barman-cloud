@@ -101,6 +101,11 @@ func (in *BarmanObjectStoreConfiguration) DeepCopyInto(out *BarmanObjectStoreCon
 		*out = new(pkgapi.SecretKeySelector)
 		**out = **in
 	}
+	if in.EndpointCAConfigMap != nil {
+		in, out := &in.EndpointCAConfigMap, &out.EndpointCAConfigMap
+		*out = new(pkgapi.ConfigMapKeySelector)
+		**out = **in
+	}
 	if in.Wal != nil {
 		in, out := &in.Wal, &out.Wal
 		*out = new(WalBackupConfiguration)
