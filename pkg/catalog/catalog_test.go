@@ -20,6 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 package catalog
 
 import (
+	"math/rand/v2"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -169,6 +170,86 @@ var _ = Describe("Backup catalog with a failed backup", func() {
 	It("does not find the failed backup by ID", func() {
 		_, err := catalog.FindBackupInfo(fakeRecoveryTarget{backupID: "202101021200"})
 		Expect(err).To(HaveOccurred())
+	})
+})
+
+var _ = Describe("Backup catalog with incomplete backups", func() {
+	at := func(day, hour, minute int) time.Time {
+		return time.Date(2021, 1, day, hour, minute, 0, 0, time.UTC)
+	}
+	completed := func(id string, begin, end time.Time) BarmanBackup {
+		return BarmanBackup{ID: id, BeginTime: begin, EndTime: end, TimeLine: 1}
+	}
+	started := func(id string, begin time.Time) BarmanBackup {
+		return BarmanBackup{ID: id, BeginTime: begin, TimeLine: 1}
+	}
+
+	// In the order barman-cloud-backup-list returns them. Backups killed while
+	// running stay STARTED with no end time, and one that failed before
+	// starting has no begin time either.
+	backups := func() []BarmanBackup {
+		return []BarmanBackup{
+			started("20201201T072654", time.Date(2020, 12, 1, 7, 26, 0, 0, time.UTC)),
+			started("20201201T102546", time.Date(2020, 12, 1, 10, 25, 0, 0, time.UTC)),
+			started("20201211T072654", time.Date(2020, 12, 11, 7, 26, 0, 0, time.UTC)),
+			started("20201211T223256", time.Date(2020, 12, 11, 22, 32, 0, 0, time.UTC)),
+			started("20201211T224257", time.Date(2020, 12, 11, 22, 42, 0, 0, time.UTC)),
+			started("20201214T003423", time.Date(2020, 12, 14, 0, 34, 0, 0, time.UTC)),
+			started("20201222T071322", time.Date(2020, 12, 22, 7, 13, 0, 0, time.UTC)),
+			started("20201223T075328", time.Date(2020, 12, 23, 7, 53, 0, 0, time.UTC)),
+			started("20210107T073814", at(7, 7, 38)),
+			completed("20210110T235627", at(10, 23, 56), at(12, 12, 13)),
+			started("20210112T121356", at(12, 12, 13)),
+			started("20210113T090814", at(13, 9, 8)),
+			started("20210113T091507", at(13, 9, 15)),
+			{ID: "20210113T124202", TimeLine: 1},
+			started("20210113T124603", at(13, 12, 46)),
+			started("20210113T131603", at(13, 13, 16)),
+			completed("20210114T072654", at(14, 7, 26), at(14, 18, 13)),
+			completed("20210115T072700", at(15, 7, 27), at(15, 18, 15)),
+			completed("20210116T072654", at(16, 7, 26), at(16, 17, 57)),
+			completed("20210117T072654", at(17, 7, 26), at(17, 18, 4)),
+			started("20210118T072655", at(18, 7, 26)),
+			started("20210118T123615", at(18, 12, 36)),
+			completed("20210118T224422", at(18, 22, 44), at(19, 8, 49)),
+			completed("20210119T085107", at(19, 8, 51), at(19, 19, 5)),
+			started("20210120T072654", at(20, 7, 26)),
+			started("20210120T082923", at(20, 8, 29)),
+		}
+	}
+
+	It("finds the latest and the first completed backups", func() {
+		catalog := NewCatalog(backups())
+		Expect(catalog.LatestBackupInfo().ID).To(Equal("20210119T085107"))
+		Expect(*catalog.GetLastSuccessfulBackupTime()).To(Equal(at(19, 19, 5)))
+		Expect(*catalog.FirstRecoverabilityPoint()).To(Equal(at(12, 12, 13)))
+	})
+
+	It("restores from the latest completed backup", func() {
+		backup, err := NewCatalog(backups()).FindBackupInfo(fakeRecoveryTarget{})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(backup.ID).To(Equal("20210119T085107"))
+	})
+
+	It("sorts the same way whatever the input order", func() {
+		expected := NewCatalog(backups()).GetBackupIDs()
+		Expect(expected[:8]).To(Equal([]string{
+			"20210110T235627",
+			"20210114T072654",
+			"20210115T072700",
+			"20210116T072654",
+			"20210117T072654",
+			"20210118T224422",
+			"20210119T085107",
+			"20210113T124202",
+		}))
+
+		rng := rand.New(rand.NewPCG(1, 2))
+		for range 200 {
+			list := backups()
+			rng.Shuffle(len(list), func(i, j int) { list[i], list[j] = list[j], list[i] })
+			Expect(NewCatalog(list).GetBackupIDs()).To(Equal(expected))
+		}
 	})
 })
 

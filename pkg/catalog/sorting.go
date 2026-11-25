@@ -24,19 +24,22 @@ func (catalog *Catalog) Len() int {
 	return len(catalog.List)
 }
 
-// Less implements sort.Interface
+// Less implements sort.Interface: completed backups first, then the
+// incomplete ones, each ordered by begin time and then by ID.
 func (catalog *Catalog) Less(i, j int) bool {
-	if catalog.List[i].BeginTime.IsZero() {
-		// backups which are not completed go to the bottom
-		return false
+	a, b := &catalog.List[i], &catalog.List[j]
+
+	aCompleted := !a.BeginTime.IsZero() && !a.EndTime.IsZero()
+	bCompleted := !b.BeginTime.IsZero() && !b.EndTime.IsZero()
+	if aCompleted != bCompleted {
+		return aCompleted
 	}
 
-	if catalog.List[i].EndTime.IsZero() {
-		// backups which are not completed go to the bottom
-		return true
+	if !a.BeginTime.Equal(b.BeginTime) {
+		return a.BeginTime.Before(b.BeginTime)
 	}
 
-	return catalog.List[i].BeginTime.Before(catalog.List[j].EndTime)
+	return a.ID < b.ID
 }
 
 // Swap implements sort.Interface
