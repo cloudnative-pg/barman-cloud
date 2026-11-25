@@ -190,6 +190,7 @@ const (
 // BarmanObjectStoreConfiguration contains the backup configuration
 // using Barman against an S3-compatible object storage
 // +kubebuilder:validation:XValidation:rule="!has(self.s3AddressingStyle) || has(self.s3Credentials)",fieldPath=".s3AddressingStyle",reason="FieldValueForbidden",message="s3AddressingStyle requires s3Credentials"
+// +kubebuilder:validation:XValidation:rule="!has(self.endpointCA) || !has(self.endpointCAConfigMap)",fieldPath=".endpointCAConfigMap",reason="FieldValueForbidden",message="endpointCAConfigMap cannot be used together with endpointCA"
 type BarmanObjectStoreConfiguration struct {
 	// The potential credentials for each cloud provider
 	BarmanCredentials `json:",inline"`
@@ -209,8 +210,16 @@ type BarmanObjectStoreConfiguration struct {
 	// EndpointCA store the CA bundle of the barman endpoint.
 	// Useful when using self-signed certificates to avoid
 	// errors with certificate issuer and barman-cloud-wal-archive
+	// Cannot be used together with EndpointCAConfigMap.
 	// +optional
 	EndpointCA *machineryapi.SecretKeySelector `json:"endpointCA,omitempty"`
+
+	// EndpointCAConfigMap stores the CA bundle of the barman endpoint
+	// in a ConfigMap. It is an alternative to EndpointCA, useful when
+	// CA bundles are distributed as ConfigMaps (i.e. by trust-manager).
+	// Cannot be used together with EndpointCA.
+	// +optional
+	EndpointCAConfigMap *machineryapi.ConfigMapKeySelector `json:"endpointCAConfigMap,omitempty"`
 
 	// The path where to store the backup (i.e. s3://bucket/path/to/folder)
 	// this path, with different destination folders, will be used for WALs
@@ -378,6 +387,15 @@ type DataBackupConfiguration struct {
 // something
 func (crendentials BarmanCredentials) ArePopulated() bool {
 	return crendentials.Azure != nil || crendentials.AWS != nil || crendentials.Google != nil
+}
+
+// HasEndpointCA returns true when a CA bundle for the barman endpoint
+// is configured, either through a Secret or through a ConfigMap
+func (configuration *BarmanObjectStoreConfiguration) HasEndpointCA() bool {
+	if configuration == nil {
+		return false
+	}
+	return configuration.EndpointCA != nil || configuration.EndpointCAConfigMap != nil
 }
 
 // SecretNames returns the names of the secrets referenced by the credentials.

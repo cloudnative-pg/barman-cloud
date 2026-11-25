@@ -67,6 +67,40 @@ var _ = Describe("Backup validation", func() {
 		Expect(err).To(BeEmpty())
 	})
 
+	Context("with an endpoint CA", func() {
+		var configuration *api.BarmanObjectStoreConfiguration
+		BeforeEach(func() {
+			configuration = &api.BarmanObjectStoreConfiguration{
+				BarmanCredentials: api.BarmanCredentials{
+					AWS: &api.S3Credentials{InheritFromIAMRole: true},
+				},
+			}
+		})
+
+		It("accepts a ConfigMap reference", func() {
+			configuration.EndpointCAConfigMap = &machineryapi.ConfigMapKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{Name: "ca-bundle"},
+				Key:                  "ca.crt",
+			}
+			err := ValidateBackupConfiguration(configuration, field.NewPath("spec", "configuration"))
+			Expect(err).To(BeEmpty())
+		})
+
+		It("rejects a Secret and a ConfigMap reference together", func() {
+			configuration.EndpointCA = &machineryapi.SecretKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{Name: "ca-secret"},
+				Key:                  "ca.crt",
+			}
+			configuration.EndpointCAConfigMap = &machineryapi.ConfigMapKeySelector{
+				LocalObjectReference: machineryapi.LocalObjectReference{Name: "ca-bundle"},
+				Key:                  "ca.crt",
+			}
+			err := ValidateBackupConfiguration(configuration, field.NewPath("spec", "configuration"))
+			Expect(err).To(HaveLen(1))
+			Expect(err[0].Field).To(Equal("spec.configuration.endpointCAConfigMap"))
+		})
+	})
+
 	Context("with an SSE-C customer key", func() {
 		var configuration *api.BarmanObjectStoreConfiguration
 		BeforeEach(func() {
